@@ -1,0 +1,3558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Lacson Dental Clinic | Clinical Manager</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #001f5c; /* Lacson Navy */
+      --primary-light: #3385ff; /* Lacson Blue */
+      --accent: #00e5ff; /* Lacson Cyan */
+      --bg: #f8fafc;
+      --sidebar: #0f172a;
+      --sidebar-text: #94a3b8;
+      --sidebar-header: #cbd5e1;
+      --text-main: #1e293b;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --white: #ffffff;
+      --card-muted: #f8fafc;
+      --group-bg: rgba(0, 31, 92, 0.04);
+      --radius: 20px;
+      --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+      --shadow-lg: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+      --input-bg: #f8fafc;
+      
+      /* New Patterns */
+      --pattern-teeth: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 24 24' fill='none' stroke='%233385ff' stroke-width='0.5' stroke-opacity='0.1' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7 12c.5 0 .5-1.5.5-2.5 0-3.5 1-5.5 4.5-5.5s4.5 2 4.5 5.5c0 1 .5 2.5.5 2.5 1.5 0 2.5 1 2.5 2.5 0 3.5-1.5 5.5-3 5.5-.5 0-1-.5-1.5-1.5-.5 1-1 1.5-1.5 1.5-1.5 0-3-2-3-5.5 0-1.5 1-2.5 2.5-2.5'/%3E%3C/svg%3E");
+    }
+
+    body.dark-mode {
+      --bg: #020617;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --sidebar-text: #94a3b8;
+      --sidebar-header: #f8fafc;
+      --border: rgba(255, 255, 255, 0.08);
+      --white: #0f172a;
+      --card-muted: rgba(255, 255, 255, 0.03);
+      --group-bg: rgba(96, 165, 250, 0.06);
+      --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+      --shadow-lg: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      --input-bg: rgba(255, 255, 255, 0.03);
+      --primary-light: #60a5fa;
+      --pattern-teeth: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 24 24' fill='none' stroke='%2360a5fa' stroke-width='0.5' stroke-opacity='0.05' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7 12c.5 0 .5-1.5.5-2.5 0-3.5 1-5.5 4.5-5.5s4.5 2 4.5 5.5c0 1 .5 2.5.5 2.5 1.5 0 2.5 1 2.5 2.5 0 3.5-1.5 5.5-3 5.5-.5 0-1-.5-1.5-1.5-.5 1-1 1.5-1.5 1.5-1.5 0-3-2-3-5.5 0-1.5 1-2.5 2.5-2.5'/%3E%3C/svg%3E");
+    }
+
+    * { 
+      box-sizing: border-box; 
+      margin: 0; 
+      padding: 0; 
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; 
+      -webkit-font-smoothing: antialiased; 
+      -moz-osx-font-smoothing: grayscale;
+      text-rendering: optimizeLegibility;
+    }
+    
+    body { 
+      background: var(--bg); 
+      color: var(--text-main); 
+      line-height: 1.6; 
+      font-weight: 400; 
+      transition: background 0.4s cubic-bezier(0.4, 0, 0.2, 1), color 0.4s;
+      overflow-x: hidden;
+    }
+
+    #login-view {
+      position: fixed; inset: 0; 
+      background: radial-gradient(circle at top left, #1e293b, #020617);
+      display: flex; align-items: center; justify-content: center; z-index: 9999;
+    }
+    #login-view::before {
+      content: ''; position: absolute; inset: 0;
+      background-image: var(--pattern-teeth);
+      opacity: 0.15; pointer-events: none;
+    }
+    .login-box {
+      background: var(--white); padding: 3.5rem; border-radius: 24px;
+      width: 100%; max-width: 440px; text-align: center;
+      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+      border: 1px solid var(--border);
+      position: relative; z-index: 10;
+    }
+
+    .app-container { display: none; min-height: 100vh; grid-template-columns: 280px 1fr; position: relative; }
+    .app-container::before {
+      content: ''; position: fixed; inset: 0;
+      background-image: var(--pattern-teeth);
+      opacity: 0.3; pointer-events: none; z-index: -1;
+    }
+    
+    .sidebar {
+      background: var(--sidebar); color: #f1f5f9;
+      padding: 1.5rem; display: flex; flex-direction: column;
+      position: sticky; top: 0; height: 100vh;
+      box-shadow: 4px 0 10px rgba(0,0,0,0.1);
+      border-right: 1px solid rgba(255,255,255,0.05);
+      overflow-y: auto;
+      z-index: 100;
+    }
+    .sidebar-content { flex: 1; display: flex; flex-direction: column; gap: 1rem; }
+    .sidebar-footer { border-top: 1px solid rgba(255,255,255,0.08); padding-top: 1.5rem; margin-top: auto; }
+
+    .main-content { padding: 3.5rem; max-width: 1300px; margin: 0 auto; width: 100%; }
+
+    .nav-group { margin-top: 2rem; flex: 1; }
+    .nav-btn {
+      display: flex; align-items: center; gap: 14px;
+      width: 100%; padding: 14px 18px; margin-bottom: 10px;
+      border: none; border-radius: 12px; background: transparent;
+      color: #94a3b8; cursor: pointer; font-size: 15px; font-weight: 600;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .nav-btn span {
+      width: 24px;
+      display: flex;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .nav-btn:hover { background: rgba(255,255,255,0.08); color: white; transform: translateX(4px); }
+    .nav-btn.active { 
+      background: var(--primary-light); 
+      color: white; 
+      box-shadow: 0 8px 20px -4px rgba(51, 133, 255, 0.4);
+    }
+
+    .card {
+      background: var(--white); border-radius: var(--radius);
+      padding: 2.5rem; border: 1px solid var(--border);
+      box-shadow: var(--shadow); margin-bottom: 2.5rem;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .card:hover { box-shadow: var(--shadow-lg); border-color: rgba(255,255,255,0.12); }
+
+    h1 { font-size: 2.25rem; font-weight: 800; margin-bottom: 2rem; color: var(--primary); letter-spacing: -0.025em; }
+    body.dark-mode h1 { color: #f8fafc; }
+    h2 { font-size: 1.5rem; font-weight: 700; color: var(--primary); }
+    body.dark-mode h2 { color: #f8fafc; }
+    h3 { font-size: 1.25rem; font-weight: 700; color: var(--primary); }
+    body.dark-mode h3 { color: #f8fafc; }
+    
+    .btn {
+      background: var(--primary); color: white; border: none;
+      padding: 14px 28px; border-radius: 12px; font-weight: 700;
+      cursor: pointer; transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 10px;
+      box-shadow: 0 4px 6px -1px rgba(0, 31, 92, 0.2);
+    }
+    body.dark-mode .btn { background: var(--primary-light); color: #020617; }
+    .btn:hover { background: #00143d; transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 31, 92, 0.3); }
+    body.dark-mode .btn:hover { background: #93c5fd; box-shadow: 0 10px 15px -3px rgba(96, 165, 250, 0.3); }
+    .btn:active { transform: translateY(0); }
+
+    input, select, textarea {
+      width: 100%; padding: 14px; margin: 10px 0;
+      border: 1px solid var(--border); border-radius: 12px;
+      font-size: 15px; font-weight: 500; outline: none; transition: all 0.2s;
+      background: var(--input-bg); color: var(--text-main);
+    }
+    input:focus, select:focus, textarea:focus { border-color: var(--primary-light); background: var(--white); box-shadow: 0 0 0 4px rgba(51, 133, 255, 0.1); }
+    body.dark-mode input:focus, body.dark-mode select:focus, body.dark-mode textarea:focus { border-color: var(--primary-light); box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.1); }
+
+    table { width: 100%; border-collapse: separate; border-spacing: 0; margin-top: 1rem; }
+    th { text-align: left; padding: 16px; color: var(--text-muted); font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid var(--border); }
+    td { padding: 20px 16px; border-bottom: 1px solid var(--border); font-size: 15px; color: var(--text-main); }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: var(--input-bg); }
+
+    .odontogram-wrapper {
+      position: relative;
+      background: var(--white);
+      border-radius: 24px;
+      padding: 40px;
+      border: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      align-items: center;
+      margin: 0 auto;
+      max-width: 800px;
+      box-shadow: var(--shadow);
+    }
+
+    .jaw-container {
+      position: absolute;
+      width: 100%;
+      height: 320px;
+      background: transparent;
+      left: 0;
+    }
+    .jaw-container.upper { top: 10px; }
+    .jaw-container.lower { top: 350px; }
+
+    /* The "Gum" line - a subtle anatomical curve */
+    .jaw-container::after {
+      content: '';
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 85%; height: 80%;
+      border: 2px dashed var(--border);
+      border-radius: 150px 150px 40px 40px;
+      opacity: 0.3;
+      pointer-events: none;
+    }
+    .jaw-container.lower::after { border-radius: 40px 40px 150px 150px; }
+
+    .tooth-cell {
+      position: absolute;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      z-index: 5;
+    }
+
+    .tooth-cell:hover { transform: translate(-50%, -50%) scale(1.15) !important; z-index: 100; }
+
+    .tooth-cell span {
+      position: absolute;
+      top: -18px;
+      font-size: 10px;
+      font-weight: 800;
+      color: var(--text-muted);
+    }
+
+    .tooth-svg {
+      width: 100%;
+      height: 100%;
+      fill: #ffffff;
+      stroke: #64748b;
+      stroke-width: 1.2;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.05));
+      transition: all 0.2s;
+    }
+    body.dark-mode .tooth-svg { fill: #1e293b; stroke: #94a3b8; }
+
+    /* Clean clinical status colors */
+    .tooth-cell.decay .tooth-svg { fill: #fee2e2; stroke: #ef4444; stroke-width: 2; }
+    .tooth-cell.filled .tooth-svg { fill: #e0f2fe; stroke: #3b82f6; stroke-width: 2; }
+
+    .odontogram-grid { display: none !important; } /* Hide old grid */
+
+    .odontogram-wrapper {
+      position: relative;
+      background: var(--white);
+      border-radius: 12px;
+      overflow: visible;
+      height: 700px;
+      width: 100%;
+      display: block;
+      margin: 0 auto;
+    }
+    .perio-wrapper {
+      position: relative;
+      background: var(--white);
+      border-radius: 12px;
+      overflow: visible;
+      width: 100%;
+    }
+    #sketch-canvas {
+      position: absolute; top: 0; left: 0;
+      cursor: crosshair; touch-action: none;
+      display: none;
+      z-index: 10;
+      pointer-events: auto;
+    }
+
+    .status-badge {
+      position: fixed; top: 24px; right: 24px; padding: 8px 20px;
+      border-radius: 24px; font-size: 13px; font-weight: 700;
+      background: #10b981; color: white; display: none; box-shadow: var(--shadow-lg);
+      z-index: 10000;
+    }
+
+    .hidden { display: none !important; }
+
+    .sketch-toolbar {
+      display: flex; gap: 12px; align-items: center;
+      margin-top: 15px; padding: 15px; background: var(--input-bg);
+      border-radius: 14px; border: 1px solid var(--border);
+    }
+    .color-swatch {
+      width: 28px; height: 28px; border-radius: 50%; border: 3px solid white;
+      cursor: pointer; box-shadow: 0 0 0 1px #cbd5e1;
+      transition: transform 0.2s;
+    }
+    .color-swatch.active { transform: scale(1.25); box-shadow: 0 0 0 2px var(--primary-light); }
+
+    .theme-toggle {
+      display: flex; align-items: center; gap: 10px;
+      padding: 12px 16px; margin-top: 1rem;
+      border: 1px solid rgba(255,255,255,0.1); border-radius: 12px;
+      cursor: pointer; color: #94a3b8; font-size: 13px; font-weight: 600;
+      transition: all 0.2s; background: rgba(255,255,255,0.03);
+    }
+    .theme-toggle span:first-child {
+      width: 24px;
+      display: flex;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .theme-toggle:hover { background: rgba(255,255,255,0.08); color: white; }
+
+    /* Mobile Responsive Styles */
+    .mobile-header {
+      display: none;
+      position: sticky;
+      top: 0;
+      background: var(--sidebar);
+      color: white;
+      padding: 12px 20px;
+      z-index: 5000;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+    }
+    .menu-toggle {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 24px;
+      cursor: pointer;
+    }
+
+    @media (max-width: 1024px) {
+      .app-container { grid-template-columns: 1fr; }
+      .sidebar {
+        position: fixed;
+        left: -280px;
+        top: 0;
+        bottom: 0;
+        z-index: 6000;
+        width: 280px;
+        transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      .sidebar.open { left: 0; }
+      .sidebar-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.5);
+        z-index: 5500;
+        backdrop-filter: blur(2px);
+      }
+      .sidebar-overlay.active { display: block; }
+      .mobile-header { display: flex; }
+      .main-content { padding: 1.5rem; }
+      
+      h1 { font-size: 1.75rem; }
+      .card { padding: 1.5rem; }
+      
+      .odontogram-grid { 
+        padding: 15px; 
+        gap: 8px; 
+        grid-template-columns: repeat(8, 1fr); 
+      }
+      .tooth-cell { min-width: 40px; height: 80px; }
+      
+      #view-add .card { max-width: 100%; }
+      #view-add div[style*="grid-template-columns: 1fr 1fr"] { grid-template-columns: 1fr !important; }
+      
+      #view-detail div[style*="grid-template-columns: 1fr 350px"] { grid-template-columns: 1fr !important; }
+      #photo-upload-container div[style*="grid-template-columns: 200px 1fr 250px"] { 
+        grid-template-columns: 1fr !important; 
+        gap: 15px;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .login-box { padding: 2rem 1.5rem; border-radius: 0; min-height: 100vh; max-width: 100%; display: flex; flex-direction: column; justify-content: center; }
+      .main-content { padding: 1rem; }
+      
+      /* Better table handling for mobile */
+      table, thead, tbody, th, td, tr { display: block; }
+      thead tr { position: absolute; top: -9999px; left: -9999px; }
+      tr { border-bottom: 2px solid var(--border); margin-bottom: 10px; background: var(--white); border-radius: 8px; overflow: hidden; }
+      td { border: none; position: relative; padding-left: 50% !important; text-align: right; }
+      td:before { 
+        position: absolute; left: 16px; width: 45%; padding-right: 10px; 
+        white-space: nowrap; font-weight: 700; color: var(--text-muted);
+        text-align: left; font-size: 12px; text-transform: uppercase;
+      }
+      
+      /* Patient Directory Table Labels */
+      #table-body td:nth-of-type(1):before { content: "Patient"; }
+      #table-body td:nth-of-type(2):before { content: "Blood"; }
+      #table-body td:nth-of-type(3):before { content: "Status"; }
+      #table-body td:nth-of-type(4):before { content: "Update"; }
+      #table-body td:nth-of-type(5):before { content: "Action"; }
+      
+      /* Staff Table Labels */
+      #staff-table-body td:nth-of-type(1):before { content: "Email"; }
+      #staff-table-body td:nth-of-type(2):before { content: "Name"; }
+      #staff-table-body td:nth-of-type(3):before { content: "Action"; }
+
+      .card { border-radius: 12px; margin-bottom: 1.5rem; padding: 1.25rem; }
+      
+      #det-name-display { flex-direction: column; align-items: flex-start; gap: 5px; }
+      #det-name-display h1 { font-size: 1.5rem; }
+      
+      .odontogram-grid { grid-template-columns: repeat(4, 1fr); }
+      
+      .btn { width: 100%; justify-content: center; }
+      #det-bloodtype-select, #det-status, #det-lastvisit, #det-dentist-select { width: 100% !important; }
+      
+      #view-list div[style*="justify-content: space-between"] { flex-direction: column; gap: 15px; align-items: stretch !important; }
+      #view-detail div[style*="justify-content: space-between"] { flex-direction: column; gap: 15px; align-items: stretch !important; }
+      #view-detail div[style*="flex-wrap: wrap"] { flex-direction: column; gap: 15px; }
+    }
+
+    @keyframes rainbow {
+      0% { color: #ff0000; }
+      14% { color: #ff7f00; }
+      28% { color: #ffff00; }
+      42% { color: #00ff00; }
+      56% { color: #0000ff; }
+      70% { color: #4b0082; }
+      84% { color: #8b00ff; }
+      100% { color: #ff0000; }
+    }
+    .rainbow-text {
+      animation: rainbow 3s linear infinite;
+    }
+
+    /* Loading Spinner */
+    .spinner {
+      width: 44px; height: 44px;
+      border: 5px solid #f3f3f3;
+      border-top: 5px solid var(--primary-light);
+      border-radius: 50%;
+      animation: spin 1s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+      margin: 20px auto;
+    }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    .loading-container { padding: 60px; text-align: center; color: var(--text-muted); font-weight: 600; }
+
+    /* Analytics Specific Styles */
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin-bottom: 2.5rem; }
+    .stat-card { 
+      background: var(--white); padding: 25px; border-radius: 20px; border: 1px solid var(--border);
+      display: flex; flex-direction: column; gap: 8px; box-shadow: var(--shadow);
+    }
+    .stat-value { font-size: 32px; font-weight: 800; color: var(--primary-light); line-height: 1; }
+    .stat-label { font-size: 13px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+    
+    .chart-container { background: var(--white); padding: 30px; border-radius: 24px; border: 1px solid var(--border); box-shadow: var(--shadow); height: 100%; }
+    .bar-chart { display: flex; align-items: flex-end; gap: 15px; height: 200px; padding-top: 20px; margin-top: 20px; }
+    .bar-wrapper { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 10px; height: 100%; justify-content: flex-end; }
+    .bar { width: 100%; border-radius: 8px 8px 4px 4px; min-height: 5px; transition: height 1s ease-out; position: relative; }
+    .bar:hover .bar-tooltip { opacity: 1; visibility: visible; }
+    .bar-tooltip { 
+      position: absolute; top: -35px; left: 50%; transform: translateX(-50%); 
+      background: var(--sidebar); color: white; padding: 4px 10px; border-radius: 6px;
+      font-size: 11px; font-weight: 700; opacity: 0; visibility: hidden; transition: 0.2s; white-space: nowrap;
+    }
+    .bar-label { font-size: 11px; font-weight: 700; color: var(--text-muted); text-align: center; }
+    /* Solitaire Clinical Theme */
+    #solitaire-board {
+      width: 100%; height: 100%; 
+      background: radial-gradient(circle at center, #0f172a 0%, #001f5c 100%); /* Lacson Navy Base */
+      position: relative; padding: 40px; color: white;
+      user-select: none; font-family: 'Inter', sans-serif;
+      display: flex; flex-direction: column; align-items: center;
+    }
+    .solitaire-row { display: flex; gap: 25px; margin-bottom: 40px; width: 100%; max-width: 900px; justify-content: center; }
+    .card-slot {
+      width: 100px; height: 145px; border-radius: 12px;
+      border: 2px dashed rgba(255,255,255,0.1);
+      position: relative; background: rgba(255,255,255,0.02);
+    }
+    .solitaire-card {
+      width: 100px; height: 145px; background: white; border-radius: 16px;
+      position: absolute; display: flex; flex-direction: column;
+      padding: 10px;
+      color: #0f172a; font-weight: 900; font-size: 22px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.25);
+      cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border: 1px solid rgba(0,0,0,0.05);
+      backface-visibility: hidden;
+      overflow: hidden;
+    }
+    .solitaire-card:not(.back) {
+      animation: cardReveal 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    @keyframes cardReveal {
+      from { transform: rotateY(90deg); opacity: 0; }
+      to { transform: rotateY(0deg); opacity: 1; }
+    }
+    .solitaire-card.back {
+      background: linear-gradient(145deg, #1e40af, #0f172a);
+      border: 2px solid white;
+      display: flex; align-items: center; justify-content: center;
+      transition: transform 0.3s;
+    }
+    .solitaire-card.back::after {
+      content: '🦷'; font-size: 44px; opacity: 0.2; filter: brightness(2);
+    }
+    .solitaire-card.back * { display: none; }
+    .solitaire-card.red { color: #ef4444; }
+    .solitaire-card.black { color: #0f172a; }
+    .solitaire-card:hover { transform: translateY(-10px); box-shadow: 0 20px 40px rgba(0,0,0,0.4); z-index: 100 !important; }
+    
+    .tableau-col { position: relative; width: 100px; height: 500px; }
+    .foundation { background: rgba(0, 229, 255, 0.05); border-color: rgba(0, 229, 255, 0.2); }
+  </style>
+</head>
+<body>
+
+  <div id="image-viewer" class="hidden" style="position: fixed; inset: 0; background: rgba(15, 23, 42, 0.95); z-index: 11000; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 40px;">
+    <button onclick="window.closeImageViewer()" style="position: absolute; top: 30px; right: 30px; background: white; border: none; width: 44px; height: 44px; border-radius: 50%; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 15px rgba(0,0,0,0.3);">✕</button>
+    <img id="viewer-img" style="max-width: 100%; max-height: 80vh; border-radius: 12px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);">
+    <div id="viewer-info" style="margin-top: 24px; color: white; text-align: center; max-width: 600px;">
+      <h3 id="viewer-category" style="color: var(--accent); margin-bottom: 8px; text-transform: uppercase; font-size: 14px; letter-spacing: 1px;"></h3>
+      <p id="viewer-note" style="font-size: 18px; font-weight: 500;"></p>
+    </div>
+  </div>
+
+  <div id="appointment-modal" class="hidden" style="position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 10600; display: none; align-items: center; justify-content: center; padding: 20px;">
+    <div class="card" style="width: 100%; max-width: 500px; margin: 0;">
+      <h3 id="app-modal-title" style="margin-bottom: 20px;">Schedule New Appointment</h3>
+      
+      <div style="margin-bottom: 15px;">
+        <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; display: block; margin-bottom: 5px;">Select Patient</label>
+        <select id="app-patient-id" style="margin: 0;">
+          <!-- Populated dynamically -->
+        </select>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+        <div>
+          <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; display: block; margin-bottom: 5px;">Date</label>
+          <input type="date" id="app-date" style="margin: 0;">
+        </div>
+        <div>
+          <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; display: block; margin-bottom: 5px;">Time Slot</label>
+          <select id="app-hour" style="margin: 0;">
+            <option value="8">8:00 AM</option>
+            <option value="9">9:00 AM</option>
+            <option value="10">10:00 AM</option>
+            <option value="11">11:00 AM</option>
+            <option value="12">12:00 PM</option>
+            <option value="1">1:00 PM</option>
+            <option value="2">2:00 PM</option>
+            <option value="3">3:00 PM</option>
+            <option value="4">4:00 PM</option>
+            <option value="5">5:00 PM</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="margin-bottom: 20px;">
+        <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; display: block; margin-bottom: 5px;">Procedure / Notes</label>
+        <input type="text" id="app-procedure" placeholder="e.g. Tooth Extraction" style="margin: 0;">
+      </div>
+      
+      <div style="display: flex; gap: 10px;">
+        <button id="app-save-btn" class="btn" style="flex: 1;" onclick="window.processAppointment()">Save Appointment</button>
+        <button id="app-delete-btn" class="btn" style="flex: 1; background: #ef4444; display: none;" onclick="window.deleteAppointment()">Delete</button>
+        <button class="btn" style="flex: 1; background: #94a3b8;" onclick="window.closeAppointmentModal()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="edit-photo-modal" class="hidden" style="position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 10500; display: none; align-items: center; justify-content: center; padding: 20px;">
+    <div class="card" style="width: 100%; max-width: 450px; margin: 0;">
+      <h3 style="margin-bottom: 20px;">Edit Documentation</h3>
+      
+      <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; display: block; margin-bottom: 5px;">Replace Image (Optional)</label>
+      <input type="file" id="edit-photo-file" accept="image/*" style="margin-bottom: 15px; font-size: 12px; padding: 8px; background: #f8fafc;">
+      
+      <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; display: block; margin-bottom: 5px;">Category</label>
+      <select id="edit-photo-category" style="margin-bottom: 15px;">
+        <option value="Intraoral">Intraoral Photo</option>
+        <option value="X-ray">X-ray / Radiograph</option>
+        <option value="Extraoral">Extraoral Photo</option>
+        <option value="Pre-op">Pre-operative</option>
+        <option value="Post-op">Post-operative</option>
+        <option value="Other">Other</option>
+      </select>
+      
+      <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; display: block; margin-bottom: 5px;">Clinical Note</label>
+      <textarea id="edit-photo-note" style="width: 100%; height: 100px; padding: 12px; border: 2px solid var(--border); border-radius: 12px; margin-bottom: 20px;"></textarea>
+      
+      <div style="display: flex; gap: 10px;">
+        <button class="btn" style="flex: 1;" onclick="window.savePhotoEdit()">Update Record</button>
+        <button class="btn" style="flex: 1; background: #94a3b8;" onclick="window.closePhotoEdit()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="status-sync" class="status-badge">✨ Changes Synced</div>
+
+  <div class="sidebar-overlay" id="sidebar-overlay" onclick="window.toggleMenu(false)"></div>
+
+  <div id="login-view">
+    <div style="position: absolute; top: 40px; width: 100%; text-align: center; padding: 0 20px;">
+      <h1 class="rainbow-text" style="font-family: 'Comic Sans MS', 'Comic Sans', cursive; font-size: clamp(24px, 5vw, 48px); text-shadow: 3px 3px 0px rgba(0,0,0,0.6); opacity: 0.9;">
+        dont forget to "copy to github then link to vercel"
+      </h1>
+    </div>
+    <div class="login-box">
+      <div style="margin-bottom: 2.5rem;">
+        <div style="background: linear-gradient(135deg, var(--primary), var(--primary-light)); width: 84px; height: 84px; border-radius: 20px; color: white; display: flex; align-items: center; justify-content: center; font-size: 44px; font-weight: 900; margin: 0 auto 1.5rem; box-shadow: 0 15px 30px -5px rgba(0, 31, 92, 0.4); border: 4px solid rgba(255,255,255,0.1);">L</div>
+        <h2 style="font-size: 26px; font-weight: 900; color: var(--primary); letter-spacing: 1px; line-height: 1.2;">LACSON<br><span style="color: var(--primary-light); font-size: 16px; letter-spacing: 3px; font-weight: 700;">DENTAL CLINIC</span></h2>
+      </div>
+      
+      <div style="display: flex; flex-direction: column; gap: 4px; margin-bottom: 1.5rem;">
+        <input type="email" id="login-email" placeholder="Email address">
+        <input type="password" id="login-pass" placeholder="Password">
+      </div>
+      
+      <button class="btn" id="login-btn" style="width: 100%; justify-content: center; height: 52px; font-size: 16px;" onclick="window.handleLogin()">
+        <span id="login-btn-text">Access Dashboard</span>
+        <div id="login-spinner" class="spinner hidden" style="width: 20px; height: 20px; border-width: 3px; margin: 0;"></div>
+      </button>
+      <p id="auth-error" style="color: #ef4444; font-size: 14px; margin-top: 1.5rem; display: none; font-weight: 600;"></p>
+
+      <div style="margin-top: 3.5rem; font-size: 12px; color: var(--text-muted); line-height: 1.6; font-weight: 500;">
+        &copy; 2026 Lacson Dental Clinic<br>
+        <span style="opacity: 0.6; font-size: 11px;">Made by Ethan Lacson</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="app-container" id="app">
+    <header class="mobile-header">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <span style="background: white; color: var(--primary); padding: 2px 8px; border-radius: 4px; font-weight: 900; font-size: 14px;">L</span>
+        <span style="font-weight: 700; font-size: 14px; letter-spacing: 0.5px;">LACSON DENTAL</span>
+      </div>
+      <button class="menu-toggle" onclick="window.toggleMenu(true)">☰</button>
+    </header>
+
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-content">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+          <div style="display: flex; align-items: center; gap: 14px;">
+            <div style="background: linear-gradient(135deg, var(--primary), var(--primary-light)); min-width: 48px; height: 48px; border-radius: 12px; color: white; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 900; box-shadow: 0 8px 16px -4px rgba(0, 0, 0, 0.3);">L</div>
+            <div style="display: flex; flex-direction: column; line-height: 1.1;">
+              <span style="color: var(--accent); letter-spacing: 1px; font-size: 18px; font-weight: 900;">LACSON</span>
+              <span style="color: var(--primary-light); font-size: 9px; letter-spacing: 1px; font-weight: 800; text-transform: uppercase;">Dental Clinic</span>
+            </div>
+          </div>
+          <button class="menu-toggle" onclick="window.toggleMenu(false)" style="display: none;" id="close-menu-btn">✕</button>
+        </div>
+
+        <div style="padding: 16px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: 14px; font-size: 11px; color: #94a3b8;">
+          <div style="font-weight: 700; color: #cbd5e1; margin-bottom: 8px; text-transform: uppercase; font-size: 10px; letter-spacing: 0.05em;">Clinic Information</div>
+          <div style="margin-bottom: 6px; display: flex; align-items: flex-start; gap: 8px;">
+            <span style="width: 24px; text-align: center; flex-shrink: 0;"><i data-lucide="map-pin" style="width: 14px;"></i></span>
+            <span>Sta Cruz, Magalang, Philippines, 2011</span>
+          </div>
+          <div style="margin-bottom: 6px; display: flex; align-items: center; gap: 8px;">
+            <span style="width: 24px; text-align: center; flex-shrink: 0;"><i data-lucide="phone" style="width: 14px;"></i></span>
+            <span>0919 004 4385</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="width: 24px; text-align: center; flex-shrink: 0;"><i data-lucide="mail" style="width: 14px;"></i></span>
+            <span style="word-break: break-all;">doknoi@yahoo.com</span>
+          </div>
+        </div>
+
+        <div id="user-display" style="padding: 16px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: 14px; font-size: 11px; color: #94a3b8;">
+          <div style="font-weight: 700; color: #cbd5e1; margin-bottom: 6px; text-transform: uppercase; font-size: 10px; letter-spacing: 0.05em;">Session Active</div>
+          <div id="current-user-email" style="word-break: break-all; opacity: 0.9; font-weight: 500;">...</div>
+        </div>
+
+        <nav class="nav-group" style="margin-top: 1rem;">
+          <button class="nav-btn active" id="nav-list" onclick="window.showView('list')">
+            <span><i data-lucide="users"></i></span> Patients
+          </button>
+          <button class="nav-btn" id="nav-scheduler" onclick="window.showView('scheduler')">
+            <span><i data-lucide="calendar"></i></span> Scheduler
+          </button>
+          <button class="nav-btn" id="nav-add" onclick="window.showView('add')">
+            <span><i data-lucide="user-plus"></i></span> New Admission
+          </button>
+          <button class="nav-btn" id="nav-staff" onclick="window.showView('staff')">
+            <span><i data-lucide="clipboard-list"></i></span> Staff Directory
+          </button>
+          <button class="nav-btn" id="nav-analytics" onclick="window.showView('analytics')">
+            <span><i data-lucide="bar-chart-3"></i></span> Clinic Analytics
+          </button>
+          <button class="nav-btn" id="nav-solitaire" onclick="window.showView('solitaire')">
+            <span><i data-lucide="gamepad-2"></i></span> Break Room
+          </button>
+        </nav>
+
+        <div class="theme-toggle" onclick="window.toggleTheme()" style="margin-top: auto;">
+          <span id="theme-icon"><i data-lucide="moon"></i></span>
+          <span id="theme-text">Dark Mode</span>
+        </div>
+      </div>
+
+      <div class="sidebar-footer">
+        <button class="nav-btn" onclick="window.handleLogout()" style="color: #fb7185; margin-bottom: 1rem; padding: 10px 18px;">
+          <span><i data-lucide="log-out"></i></span> Sign Out
+        </button>
+        <div style="padding: 0 16px; font-size: 10px; font-weight: 500; color: #64748b; line-height: 1.4;">
+          &copy; 2026 Lacson Dental Clinic<br>
+          <span style="opacity: 0.6;">Made by Ethan Lacson</span>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <!-- List View -->
+      <div id="view-list">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+          <h1>Patient Directory</h1>
+          <button class="btn" onclick="window.showView('add')">Add New Patient</button>
+        </div>
+        
+        <div class="card" style="padding: 1.5rem; margin-bottom: 1.5rem;">
+          <div style="position: relative;">
+            <span style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: var(--text-muted); display: flex; align-items: center;"><i data-lucide="search" style="width: 18px;"></i></span>
+            <input type="text" id="patient-search" placeholder="Search by name, phone, or blood type..." style="margin: 0; padding-left: 45px; height: 50px; background: var(--white);" oninput="window.filterPatients()">
+          </div>
+        </div>
+
+        <div class="card">
+          <table>
+            <thead>
+              <tr>
+                <th>Patient Name</th>
+                <th>Phone Number</th>
+                <th>Status</th>
+                <th>Address</th>
+                <th style="text-align: right;">Action</th>
+              </tr>
+            </thead>
+            <tbody id="table-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Scheduler View -->
+      <div id="view-scheduler" class="hidden">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+          <h1>Appointment Scheduler</h1>
+          <button class="btn" onclick="window.openNewAppointment()">New Appointment</button>
+        </div>
+
+        <div class="card" style="padding: 1.5rem; margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+          <div style="display: flex; gap: 10px;">
+            <button class="btn" style="padding: 8px 16px; background: var(--card-muted); color: var(--text-main); border: 1px solid var(--border);" onclick="window.changeWeek(-1)">← Previous</button>
+            <button class="btn" style="padding: 8px 16px; background: var(--card-muted); color: var(--text-main); border: 1px solid var(--border);" onclick="window.changeWeek(0)">Today</button>
+            <button class="btn" style="padding: 8px 16px; background: var(--card-muted); color: var(--text-main); border: 1px solid var(--border);" onclick="window.changeWeek(1)">Next →</button>
+          </div>
+          <h2 id="scheduler-date-range">April 13 - 19, 2026</h2>
+          <div style="display: flex; gap: 10px;">
+            <select id="scheduler-dentist-filter" style="margin: 0; width: 200px; padding: 8px;" onchange="window.renderScheduler()">
+              <option value="all">All Dentists</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="card" style="padding: 0; overflow: hidden;">
+          <div id="scheduler-grid" style="display: grid; grid-template-columns: 80px repeat(7, 1fr); background: var(--border);">
+            <!-- Headers and Slots injected here -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Add View -->
+      <div id="view-add" class="hidden">
+        <h1>Register New Patient</h1>
+        <div class="card" style="max-width: 900px;">
+          <h3 style="margin-bottom: 1.5rem; color: var(--primary-light);">Personal Information</h3>
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-bottom: 2rem;">
+            <div>
+              <label style="font-size: 13px; font-weight: 600;">First Name</label>
+              <input type="text" id="new-fname" placeholder="John">
+            </div>
+            <div>
+              <label style="font-size: 13px; font-weight: 600;">Last Name</label>
+              <input type="text" id="new-lname" placeholder="Doe">
+            </div>
+            <div>
+              <label style="font-size: 13px; font-weight: 600;">Gender</label>
+              <select id="new-gender">
+                <option value="">Select</option>
+                <option>Male</option>
+                <option>Female</option>
+                <option>Other</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size: 13px; font-weight: 600;">Civil Status</label>
+              <select id="new-civil-status">
+                <option value="">Select</option>
+                <option>Single</option>
+                <option>Married</option>
+                <option>Widowed</option>
+                <option>Separated</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size: 13px; font-weight: 600;">Date of Birth</label>
+              <input type="date" id="new-dob">
+            </div>
+            <div>
+              <label style="font-size: 13px; font-weight: 600;">Phone Number</label>
+              <input type="tel" id="new-phone" placeholder="09XX XXX XXXX">
+            </div>
+            <div>
+              <label style="font-size: 13px; font-weight: 600;">Address</label>
+              <input type="text" id="new-address" placeholder="Barangay, City, Province">
+            </div>
+            <div>
+              <label style="font-size: 13px; font-weight: 600;">Occupation</label>
+              <input type="text" id="new-occupation" placeholder="e.g. Teacher, Engineer">
+            </div>
+          </div>
+
+          <h3 style="margin-bottom: 1.5rem; color: var(--primary-light);">Medical & Dental History</h3>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <div style="grid-column: span 2;">
+              <label style="font-size: 13px; font-weight: 600;">Chief Complaint</label>
+              <input type="text" id="new-complaint" placeholder="e.g. Pain in lower right molar, Bleeding gums">
+            </div>
+            <div style="grid-column: span 2;">
+              <label style="font-size: 13px; font-weight: 600;">Medical Alerts / Allergies</label>
+              <input type="text" id="new-alerts" placeholder="e.g. Penicillin Allergy, Diabetes, Hypertension, Heart Condition">
+            </div>
+            <div>
+              <label style="font-size: 13px; font-weight: 600;">Last Dental Visit</label>
+              <input type="date" id="new-lastvisit">
+            </div>
+            <div>
+              <label style="font-size: 13px; font-weight: 600;">Reason for Visit</label>
+              <select id="new-reason">
+                <option value="">Select Reason</option>
+                <option>Routine Checkup</option>
+                <option>Dental Pain / Emergency</option>
+                <option>Cleaning / Prophylaxis</option>
+                <option>Orthodontic Consultation</option>
+                <option>Cosmetic / Whitening</option>
+                <option>Other</option>
+              </select>
+            </div>
+            <div style="grid-column: span 2;">
+              <label style="font-size: 13px; font-weight: 600;">Dental Concern</label>
+              <input type="text" id="new-concern" placeholder="e.g. Sensitivity in upper left molar">
+            </div>
+            <div style="grid-column: span 2;">
+              <label style="font-size: 13px; font-weight: 600;">Clinical Notes</label>
+              <textarea id="new-notes" style="width: 100%; height: 100px; padding: 12px; border: 1px solid var(--border); border-radius: 8px; outline: none;" placeholder="Describe your concern in more detail..."></textarea>
+            </div>
+            <div style="grid-column: span 2;">
+              <label style="font-size: 13px; font-weight: 600;">Initial Documentation (Image)</label>
+              <div style="display: flex; gap: 10px; align-items: center;">
+                <input type="file" id="new-image" accept="image/*" style="margin: 0;">
+                <p style="font-size: 11px; color: var(--text-muted); line-height: 1.2;">Max 1MB recommended.</p>
+              </div>
+            </div>
+          </div>
+          <button class="btn" style="width: 100%; margin-top: 2rem; height: 54px;" onclick="window.createPatient()">Create Cloud Record</button>
+        </div>
+      </div>
+
+      <!-- Detail View -->
+      <div id="view-detail" class="hidden">
+        <div style="margin-bottom: 2rem;">
+          <button onclick="window.showView('list')" style="background: none; border: none; color: var(--primary); cursor: pointer; font-weight: 600;">← Back to Directory</button>
+          <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <div>
+              <div id="det-name-display" style="display: flex; align-items: center; gap: 10px; margin-top: 10px; margin-bottom: 5px;">
+                <h1 id="det-name" style="margin: 0;"></h1>
+                <button onclick="window.toggleEditName(true)" style="background:none; border:none; cursor:pointer; color: var(--text-muted); opacity: 0.6; display: flex; align-items: center;"><i data-lucide="edit-3" style="width: 18px;"></i></button>
+              </div>
+              <div id="det-name-edit" class="hidden" style="display: flex; align-items: center; gap: 10px; margin-top: 10px; margin-bottom: 5px;">
+                <input type="text" id="edit-fname" style="width: 140px; margin: 0; padding: 8px;">
+                <input type="text" id="edit-lname" style="width: 140px; margin: 0; padding: 8px;">
+                <button class="btn" style="padding: 8px 16px; font-size: 13px;" onclick="window.saveName()">Save</button>
+                <button class="btn" style="padding: 8px 16px; font-size: 13px; background: #94a3b8;" onclick="window.toggleEditName(false)">Cancel</button>
+              </div>
+              <p style="color: var(--text-muted); font-size: 14px;">Clinical Odontogram & Treatment History</p>
+            </div>
+            <button class="btn" style="background: #ef4444;" onclick="window.deletePatient(currentId)">Delete Patient</button>
+          </div>
+        </div>
+
+        <div id="medical-alert-banner" class="hidden" style="background: var(--group-bg); border-left: 5px solid var(--primary-light); padding: 15px 25px; border-radius: 12px; margin-bottom: 20px; display: flex; align-items: center; gap: 15px; color: var(--text-main); font-weight: 700; box-shadow: var(--shadow);">
+          <span style="color: var(--primary-light); display: flex; align-items: center;"><i data-lucide="alert-triangle"></i></span>
+          <div>
+            <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted);">Important Medical Note</div>
+            <div id="alert-text-banner">No alerts recorded.</div>
+          </div>
+        </div>
+
+        <div class="card" style="background: var(--card-muted); border: 1px solid var(--border); border-left: 4px solid var(--primary-light);">
+          <div style="display: flex; flex-wrap: wrap; gap: 25px; margin-bottom: 25px;">
+            <div style="flex: 1; min-width: 150px;">
+              <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Phone Number</label>
+              <input type="tel" id="det-phone" style="margin: 0; padding: 6px; font-size: 14px; background: var(--white);" onblur="window.updateClinicalField('phone', this.value)">
+            </div>
+            <div style="flex: 1; min-width: 150px;">
+              <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Date of Birth</label>
+              <input type="date" id="det-dob" style="margin: 0; padding: 6px; font-size: 14px; background: var(--white);" onchange="window.updateClinicalField('dob', this.value)">
+            </div>
+            <div style="flex: 1; min-width: 120px;">
+              <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Age</label>
+              <div id="det-age-display" style="padding: 10px 6px; font-size: 15px; font-weight: 700; color: var(--primary-light);">—</div>
+            </div>
+            <div style="flex: 1; min-width: 120px;">
+              <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Gender</label>
+              <select id="det-gender" style="margin: 0; padding: 6px; font-size: 14px; background: var(--white);" onchange="window.updateClinicalField('gender', this.value)">
+                <option value="">Select</option>
+                <option>Male</option>
+                <option>Female</option>
+                <option>Other</option>
+              </select>
+            </div>
+            <div style="flex: 1; min-width: 120px;">
+              <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Civil Status</label>
+              <select id="det-civil-status" style="margin: 0; padding: 6px; font-size: 14px; background: var(--white);" onchange="window.updateClinicalField('civil_status', this.value)">
+                <option value="">Select</option>
+                <option>Single</option>
+                <option>Married</option>
+                <option>Widowed</option>
+                <option>Separated</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="display: flex; flex-wrap: wrap; gap: 25px; margin-bottom: 25px; padding-top: 20px; border-top: 1px solid var(--border);">
+            <div style="flex: 1; min-width: 250px;">
+              <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Address</label>
+              <input type="text" id="det-address" style="margin: 0; padding: 6px; font-size: 14px; background: var(--white);" onblur="window.updateClinicalField('address', this.value)">
+            </div>
+            <div style="flex: 1; min-width: 150px;">
+              <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Occupation</label>
+              <input type="text" id="det-occupation" style="margin: 0; padding: 6px; font-size: 14px; background: var(--white);" onblur="window.updateClinicalField('occupation', this.value)">
+            </div>
+            <div style="flex: 1; min-width: 200px;">
+              <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Attending Dentist</label>
+              <select id="det-dentist-select" style="margin: 0; padding: 6px; font-size: 14px; font-weight: 600; display: block; background: var(--white);" onchange="window.updateClinicalField('dentist_email', this.value)">
+                <option value="General / Unassigned">General / Unassigned</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="width: 100%; border-top: 1px solid var(--border); padding-top: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <div style="grid-column: span 2;">
+              <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Chief Complaint</label>
+              <input type="text" id="det-complaint" style="margin: 0; padding: 6px; font-size: 14px; background: var(--white);" onblur="window.updateClinicalField('complaint', this.value)">
+            </div>
+            <div style="grid-column: span 2;">
+              <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Medical History Alerts</label>
+              <input type="text" id="det-alerts" style="margin: 0; padding: 6px; font-size: 14px; background: var(--white);" onblur="window.updateClinicalField('medical_alerts', this.value)">
+            </div>
+          </div>
+            <div>
+              <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Clinical Status</label>
+              <select id="det-status" style="margin: 0; padding: 6px; font-size: 14px; font-weight: 600; background: var(--white);" onchange="window.updateClinicalField('status', this.value)">
+                <option value="Active">Active</option>
+                <option value="Inactive">Inactive</option>
+                <option value="Completed">Completed</option>
+                <option value="Emergency">Emergency</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Last Dental Visit</label>
+              <input type="date" id="det-lastvisit" style="margin: 0; padding: 6px; font-size: 14px; background: var(--white);" onchange="window.updateClinicalField('lastvisit', this.value)">
+            </div>
+            <div>
+              <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Reason for Visit</label>
+              <select id="det-reason" style="margin: 0; padding: 6px; font-size: 14px; background: var(--white);" onchange="window.updateClinicalField('reason', this.value)">
+                <option value="">Select Reason</option>
+                <option>Routine Checkup</option>
+                <option>Dental Pain / Emergency</option>
+                <option>Cleaning / Prophylaxis</option>
+                <option>Orthodontic Consultation</option>
+                <option>Cosmetic / Whitening</option>
+                <option>Other</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Primary Concern</label>
+              <input type="text" id="det-concern" style="margin: 0; padding: 6px; font-size: 14px; background: var(--white);" onblur="window.updateClinicalField('concern', this.value)">
+            </div>
+            <div style="grid-column: span 2;">
+              <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Additional Clinical Notes</label>
+              <textarea id="det-notes" style="width: 100%; height: 80px; margin-top: 5px; padding: 10px; border: 1px solid var(--border); border-radius: 8px;" onblur="window.updateClinicalField('notes', this.value)"></textarea>
+            </div>
+          </div>
+
+        <div class="card" style="margin-bottom: 24px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <div style="display: flex; align-items: center; gap: 15px;">
+              <h3 style="margin: 0;">Teeth Mapping</h3>
+              <button class="btn" style="padding: 6px 12px; font-size: 12px; background: #94a3b8;" id="sketch-toggle" onclick="window.toggleSketchMode()">Toggle Notes Mode</button>
+            </div>
+            <div style="display: flex; gap: 15px; font-size: 12px; font-weight: 600;">
+              <span style="display: flex; align-items: center; gap: 4px;"><div style="width:12px; height:12px; background:#fee2e2; border:1px solid #ef4444;"></div> Decay</span>
+              <span style="display: flex; align-items: center; gap: 4px;"><div style="width:12px; height:12px; background:#dbeafe; border:1px solid #3b82f6;"></div> Filled</span>
+            </div>
+          </div>
+          
+          <div id="sketch-toolbar" class="sketch-toolbar" style="display: none;">
+            <div class="color-swatch active" style="background: #ef4444;" onclick="window.setSketchColor('#ef4444', this)"></div>
+            <div class="color-swatch" style="background: #3b82f6;" onclick="window.setSketchColor('#3b82f6', this)"></div>
+            <div class="color-swatch" style="background: #0f172a;" onclick="window.setSketchColor('#0f172a', this)"></div>
+            <div class="color-swatch" style="background: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 14px; border: 1px solid #cbd5e1;" onclick="window.setSketchColor('erase', this)">🧽</div>
+            <div style="width: 1px; height: 24px; background: var(--border); margin: 0 5px;"></div>
+            <button class="btn" style="padding: 4px 8px; font-size: 14px; background: white; color: var(--text-main); border: 1px solid var(--border);" onclick="window.undoSketch()" title="Undo">↩️</button>
+            <button class="btn" style="padding: 4px 8px; font-size: 14px; background: white; color: var(--text-main); border: 1px solid var(--border);" onclick="window.redoSketch()" title="Redo">↪️</button>
+            <div style="flex: 1;"></div>
+            <button class="btn" style="padding: 4px 10px; font-size: 11px; background: #94a3b8;" onclick="window.clearSketch()">Clear All</button>
+            <button class="btn" style="padding: 4px 10px; font-size: 11px;" onclick="window.saveSketch()">Save Notes</button>
+          </div>
+
+          <div class="odontogram-wrapper">
+            <div id="jaw-upper" class="jaw-container upper"></div>
+            <div id="jaw-lower" class="jaw-container lower"></div>
+            <canvas id="sketch-canvas"></canvas>
+          </div>
+        </div>
+
+        <div class="card" style="margin-bottom: 24px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <div style="display: flex; align-items: center; gap: 15px;">
+              <h3 style="margin: 0;">Periodontal Charting (Visual)</h3>
+              <button class="btn" style="padding: 6px 12px; font-size: 12px; background: #94a3b8;" id="perio-sketch-toggle" onclick="window.toggleSketchMode('perio')">Toggle Notes Mode</button>
+            </div>
+            <button class="btn" style="padding: 8px 16px; font-size: 13px; background: #94a3b8;" onclick="window.savePerioData()">Save Perio Record</button>
+          </div>
+          <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 25px;">Record pocket depths (mm). Red highlights indicate deep pockets (>3mm) requiring attention.</p>
+          
+          <div class="perio-wrapper">
+            <div id="perio-visual-container" style="display: flex; flex-direction: column; gap: 40px;">
+              <!-- Upper and Lower sections injected here -->
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-bottom: 24px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <h3 style="margin: 0;">Treatment History Timeline</h3>
+            <button class="btn" style="padding: 8px 16px; font-size: 13px;" onclick="document.getElementById('treatment-form-container').classList.toggle('hidden')">Add Treatment Entry</button>
+          </div>
+
+          <div id="treatment-form-container" class="hidden" style="background: var(--group-bg); padding: 25px; border-radius: 16px; margin-bottom: 24px; border: 1px solid var(--border);">
+            <div style="display: grid; grid-template-columns: 150px 100px 1fr 200px; gap: 15px; align-items: end; margin-bottom: 15px;">
+              <div>
+                <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 5px; display: block;">Date</label>
+                <input type="date" id="treat-date" style="margin: 0; font-size: 14px;">
+              </div>
+              <div>
+                <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 5px; display: block;">Time</label>
+                <input type="time" id="treat-time" style="margin: 0; font-size: 14px;">
+              </div>
+              <div>
+                <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 5px; display: block;">Procedure / Treatment</label>
+                <input type="text" id="treat-procedure" placeholder="e.g. Tooth Extraction, Filling..." style="margin: 0; font-size: 14px;">
+              </div>
+              <div>
+                <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 5px; display: block;">Attending Dentist</label>
+                <select id="treat-dentist" style="margin: 0; font-size: 14px;">
+                  <!-- Populated dynamically -->
+                </select>
+              </div>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+              <div>
+                <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 5px; display: block;">Debit (Fee)</label>
+                <input type="number" id="treat-debit" placeholder="0.00" style="margin: 0; font-size: 14px;">
+              </div>
+              <div>
+                <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 5px; display: block;">Credit (Paid)</label>
+                <input type="number" id="treat-credit" placeholder="0.00" style="margin: 0; font-size: 14px;">
+              </div>
+              <div>
+                <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 5px; display: block;">Balance</label>
+                <input type="number" id="treat-balance" placeholder="0.00" style="margin: 0; font-size: 14px;">
+              </div>
+            </div>
+            <div style="margin-bottom: 15px;">
+              <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 5px; display: block;">Clinical Notes</label>
+              <textarea id="treat-notes" placeholder="Detailed clinical observations and post-op instructions..." style="width: 100%; height: 80px; padding: 12px; border: 1px solid var(--border); border-radius: 8px;"></textarea>
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 10px;">
+              <button class="btn" style="background: #94a3b8;" onclick="document.getElementById('treatment-form-container').classList.add('hidden')">Cancel</button>
+              <button class="btn" onclick="window.addTreatmentEntry()">Save Treatment</button>
+            </div>
+          </div>
+
+          <div id="treatment-timeline" style="position: relative; padding-left: 30px;">
+            <div style="position: absolute; left: 10px; top: 0; bottom: 0; width: 2px; background: var(--border);"></div>
+            <!-- Timeline entries injected here -->
+          </div>
+          <div id="no-treatment-msg" style="text-align: center; padding: 40px 0; color: var(--text-muted); font-size: 14px;">
+            No treatment history recorded for this patient.
+          </div>
+        </div>
+
+        <div class="card">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <h3 style="margin: 0;">Clinical Imaging & Documentation</h3>
+            <button class="btn" style="padding: 8px 16px; font-size: 13px;" onclick="document.getElementById('photo-upload-container').classList.toggle('hidden')">Add New Photo</button>
+          </div>
+
+          <div id="photo-upload-container" class="hidden" style="background: #f8fafc; padding: 25px; border-radius: 16px; margin-bottom: 24px; border: 1px solid var(--border); box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);">
+            <div style="display: grid; grid-template-columns: 200px 1fr 250px; gap: 15px; align-items: end;">
+              <div>
+                <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 5px; display: block;">Category</label>
+                <select id="photo-category" style="margin: 0; font-size: 14px;">
+                  <option value="Intraoral">Intraoral Photo</option>
+                  <option value="X-ray">X-ray / Radiograph</option>
+                  <option value="Extraoral">Extraoral Photo</option>
+                  <option value="Pre-op">Pre-operative</option>
+                  <option value="Post-op">Post-operative</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+              <div>
+                <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 5px; display: block;">Clinical Note / Finding</label>
+                <input type="text" id="photo-note" placeholder="Describe clinical findings..." style="margin: 0; font-size: 14px;">
+              </div>
+              <div>
+                <label style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 5px; display: block;">Image File</label>
+                <div style="display: flex; gap: 10px;">
+                  <input type="file" id="photo-file" accept="image/*" style="margin: 0; font-size: 12px; padding: 10px; background: white;">
+                  <button class="btn" style="white-space: nowrap;" onclick="window.processPhotoUpload()">Save Photo</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div id="image-gallery" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;">
+            <!-- Images will appear here -->
+          </div>
+          <div id="no-images-msg" style="text-align: center; padding: 60px 0; color: var(--text-muted); font-size: 14px;">
+            No clinical images have been documented for this patient.
+          </div>
+        </div>
+      </div>
+
+      <!-- Staff View -->
+      <div id="view-staff" class="hidden">
+        <h1>Staff Directory</h1>
+        <p style="color: var(--text-muted); margin-bottom: 2rem;">Assign professional names to authenticated email addresses.</p>
+        
+        <div class="card" style="max-width: 800px;">
+          <div style="display: flex; gap: 10px; margin-bottom: 2rem;">
+            <input type="email" id="staff-email" placeholder="dentist@example.com" style="flex: 2; margin: 0;">
+            <input type="text" id="staff-name" placeholder="Dr. Jane Smith" style="flex: 2; margin: 0;">
+            <button class="btn" onclick="window.saveStaffName()">Add/Update Staff</button>
+          </div>
+          
+          <table>
+            <thead>
+              <tr>
+                <th>Email Address</th>
+                <th>Display Name</th>
+                <th style="text-align: right;">Action</th>
+              </tr>
+            </thead>
+            <tbody id="staff-table-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Analytics View -->
+      <div id="view-analytics" class="hidden">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+          <h1>Clinic Performance</h1>
+          <button class="btn" style="background: var(--card-muted); color: var(--text-main); border: 1px solid var(--border);" onclick="window.loadAnalytics()">🔄 Refresh Data</button>
+        </div>
+
+        <div class="stats-grid" id="analytics-summary">
+          <!-- Summary cards injected here -->
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 30px;" id="charts-row">
+          <div class="chart-container">
+            <h3>Patient Status Distribution</h3>
+            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 20px;">Breakdown of current patient registration statuses.</p>
+            <div id="status-chart" class="bar-chart"></div>
+          </div>
+          <div class="chart-container">
+            <h3>Odontogram Findings</h3>
+            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 20px;">Total volume of decay vs. filled teeth across all records.</p>
+            <div id="findings-chart" class="bar-chart"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Dentist Workload</h3>
+          <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 20px;">Distribution of patients assigned per attending dentist.</p>
+          <div id="workload-list" style="display: flex; flex-direction: column; gap: 15px;">
+            <!-- Workload bars injected here -->
+          </div>
+        </div>
+      </div>
+      <!-- Break Room View -->
+      <div id="view-solitaire" class="hidden">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+          <div>
+            <h1>Break Room</h1>
+            <p style="color: var(--text-muted);">Clinical staff relaxation area.</p>
+          </div>
+          <div style="display: flex; gap: 10px;">
+            <button class="btn" id="game-reset-btn" onclick="window.resetCurrentGame()" style="display: none; background: #334155;">🔄 Reset Game</button>
+            <button class="btn" id="break-room-back" onclick="window.showGameLibrary()" style="display: none;">🎮 Back to Library</button>
+          </div>
+        </div>
+
+        <!-- Game Library Selection -->
+        <div id="game-library" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px;">
+          <div class="card game-card" onclick="window.launchGame('solitaire')" style="cursor: pointer; padding: 0; overflow: hidden; transition: transform 0.3s;">
+            <div style="height: 180px; background: linear-gradient(135deg, #1e40af, #0f172a); display: flex; align-items: center; justify-content: center; font-size: 60px;">🃏</div>
+            <div style="padding: 20px;">
+              <h3 style="margin: 0;">Solitaire</h3>
+              <p style="color: var(--text-muted); font-size: 13px; margin-top: 5px;">Classic card game for mental focus.</p>
+            </div>
+          </div>
+          <div class="card game-card" onclick="window.launchGame('doom')" style="cursor: pointer; padding: 0; overflow: hidden; transition: transform 0.3s;">
+            <div style="height: 180px; background: linear-gradient(135deg, #ef4444, #7f1d1d); display: flex; align-items: center; justify-content: center; font-size: 60px;">🔫</div>
+            <div style="padding: 20px;">
+              <h3 style="margin: 0;">DOOM (Lite)</h3>
+              <p style="color: var(--text-muted); font-size: 13px; margin-top: 5px;">3D raycasting engine made from scratch.</p>
+            </div>
+          </div>
+          <div class="card game-card" onclick="window.launchGame('mk')" style="cursor: pointer; padding: 0; overflow: hidden; transition: transform 0.3s;">
+            <div style="height: 180px; background: linear-gradient(135deg, #111, #444); display: flex; align-items: center; justify-content: center; font-size: 60px;">🐲</div>
+            <div style="padding: 20px;">
+              <h3 style="margin: 0;">Clinic Kombat</h3>
+              <p style="color: var(--text-muted); font-size: 13px; margin-top: 5px;">2D fighting engine. Finish the shift.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Solitaire Board -->
+        <div id="solitaire-game-container" style="display: none;">
+          <div class="card" style="padding: 0; overflow: hidden; height: 750px; background: #1a4a1a;">
+            <div id="solitaire-board">
+              <div class="solitaire-row">
+                <div id="stock" class="card-slot" onclick="window.drawCard()"></div>
+                <div id="waste" class="card-slot"></div>
+                <div style="flex: 1;"></div>
+                <div id="f-hearts" class="card-slot foundation" data-suit="♥"></div>
+                <div id="f-diamonds" class="card-slot foundation" data-suit="♦"></div>
+                <div id="f-clubs" class="card-slot foundation" data-suit="♣"></div>
+                <div id="f-spades" class="card-slot foundation" data-suit="♠"></div>
+              </div>
+              <div class="solitaire-row" id="tableau-row">
+                <div class="tableau-col" id="t-0"></div>
+                <div class="tableau-col" id="t-1"></div>
+                <div class="tableau-col" id="t-2"></div>
+                <div class="tableau-col" id="t-3"></div>
+                <div class="tableau-col" id="t-4"></div>
+                <div class="tableau-col" id="t-5"></div>
+                <div class="tableau-col" id="t-6"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Doom Board -->
+        <div id="doom-game-container" style="display: none;">
+          <div class="card" style="padding: 0; overflow: hidden; height: 750px; background: #000; position: relative;">
+            <canvas id="doom-canvas" style="width: 100%; height: 100%; display: block; image-rendering: pixelated;"></canvas>
+            <div id="doom-ui" style="position: absolute; bottom: 0; width: 100%; height: 80px; background: #0f172a; display: flex; align-items: center; justify-content: space-around; color: white; border-top: 4px solid var(--primary-light); font-family: monospace;">
+              <div style="text-align: center;"><div style="font-size: 10px; color: var(--primary-light);">PRESSURE</div><div id="doom-ammo" style="font-size: 24px;">100</div></div>
+              <div style="text-align: center;"><div style="font-size: 10px; color: var(--primary-light);">HYGIENE</div><div id="doom-health" style="font-size: 24px;">100%</div></div>
+              <!-- Shape-based Status Indicator -->
+              <div id="doom-status-container" style="width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; position: relative;">
+                <div id="doom-status-ring" style="width: 40px; height: 40px; border: 4px solid var(--primary-light); border-radius: 50%; position: absolute;"></div>
+                <div id="doom-status-core" style="width: 20px; height: 20px; background: var(--accent); border-radius: 50%; transition: transform 0.2s;"></div>
+              </div>
+              <div style="text-align: center;"><div style="font-size: 10px; color: var(--primary-light);">KILLS</div><div id="doom-kills" style="font-size: 24px;">0</div></div>
+              <button class="btn" onclick="window.startDoom()" style="background: #334155; padding: 5px 10px; font-size: 10px;">RESET MISSION</button>
+            </div>
+            <div id="doom-overlay" style="position: absolute; inset: 0; background: rgba(15, 23, 42, 0.9); display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--primary-light); z-index: 100;">
+              <h1 style="font-size: 64px; margin: 0; text-shadow: 4px 4px rgba(0,0,0,0.5); font-weight: 900;">CLINIC OPS</h1>
+              <p style="color: white; margin-top: 20px; font-weight: 600; text-align: center;">Clean the corridors. Sterilize the perimeter.<br>WASD to Move, QE to Rotate, SPACE to Scaler.</p>
+              <button class="btn" onclick="window.startDoom()" style="margin-top: 20px; background: var(--primary-light); padding: 15px 40px; font-size: 20px;">BEGIN SHIFT</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Clinic Kombat Board -->
+        <div id="mk-game-container" style="display: none;">
+          <div class="card" style="padding: 0; overflow: hidden; height: 750px; background: #000; position: relative; font-family: 'Inter', sans-serif;">
+            <canvas id="mk-canvas" style="width: 100%; height: 100%; display: block;"></canvas>
+            
+            <!-- MK UI -->
+            <div id="mk-ui" style="position: absolute; top: 40px; width: 100%; padding: 0 40px; display: flex; justify-content: space-between; align-items: flex-start;">
+              <div style="width: 45%; position: relative;">
+                <div style="height: 25px; background: #333; border: 2px solid #ffd700; position: relative; overflow: hidden;">
+                  <div id="p1-health" style="width: 100%; height: 100%; background: linear-gradient(to right, #ff0, #f00); transition: width 0.3s;"></div>
+                </div>
+                <div style="color: white; font-weight: 900; font-size: 20px; text-shadow: 2px 2px #000; margin-top: 5px;">SUB-ZERO</div>
+              </div>
+              <div style="width: 45%; position: relative;">
+                <div style="height: 25px; background: #333; border: 2px solid #ffd700; position: relative; overflow: hidden;">
+                  <div id="p2-health" style="width: 100%; height: 100%; background: linear-gradient(to left, #ff0, #f00); position: absolute; right: 0; transition: width 0.3s;"></div>
+                </div>
+                <div style="color: white; font-weight: 900; font-size: 20px; text-shadow: 2px 2px #000; margin-top: 5px; text-align: right;">SCORPION</div>
+              </div>
+            </div>
+
+            <div id="mk-timer" style="position: absolute; top: 40px; left: 50%; transform: translateX(-50%); font-size: 48px; font-weight: 900; color: #ffd700; text-shadow: 3px 3px #000;">99</div>
+            
+            <div id="mk-overlay" style="position: absolute; inset: 0; background: rgba(0,0,0,0.8); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100;">
+              <h1 id="mk-status" style="font-size: 80px; color: #f00; font-weight: 900; text-shadow: 5px 5px #000; text-align: center;">CLINIC KOMBAT</h1>
+              <p style="color: #ffd700; font-weight: 600; text-align: center; margin-bottom: 20px;">W/A/D to Move & Jump<br>J: Punch | K: Kick</p>
+              <button class="btn" onclick="window.startMK()" style="background: #f00; border: 2px solid #ffd700; padding: 15px 40px; font-size: 20px;">INSERT COIN</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const supabaseUrl = 'https://hasigzvqbfilnfoufaef.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhhc2lnenZxYmZpbG5mb3VmYWVmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY0NDUzMzAsImV4cCI6MjA5MjAyMTMzMH0.mr2IB9H_2iFAvkSWWQkcQAlu78orTgSgvmwYiQEycgQ';
+    const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
+    let patients = [];
+    let staff = {}; // email -> name mapping
+    let appointments = [];
+    let currentWeekStart = new Date();
+    // Set to start of current week (Sunday)
+    currentWeekStart.setDate(currentWeekStart.getDate() - currentWeekStart.getDay());
+    currentWeekStart.setHours(0, 0, 0, 0);
+
+    let currentId = null;
+    let isDrawing = false;
+    let sketchColor = '#ef4444';
+    let ctx = null;
+    let history = [];
+    let historyIndex = -1;
+
+    const saveHistory = () => {
+      const canvas = document.getElementById('sketch-canvas');
+      historyIndex++;
+      history.splice(historyIndex);
+      history.push(canvas.toDataURL());
+      if (history.length > 20) {
+        history.shift();
+        historyIndex--;
+      }
+    };
+
+    window.undoSketch = function() {
+      if (historyIndex > 0) {
+        historyIndex--;
+        const img = new Image();
+        img.onload = () => {
+          ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+          ctx.globalCompositeOperation = 'source-over';
+          ctx.drawImage(img, 0, 0);
+          // Restore composite operation if eraser was active
+          if (document.querySelector('.color-swatch[onclick*="erase"]').classList.contains('active')) {
+            ctx.globalCompositeOperation = 'destination-out';
+          }
+        };
+        img.src = history[historyIndex];
+      } else if (historyIndex === 0) {
+        historyIndex = -1;
+        ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+      }
+    };
+
+    window.redoSketch = function() {
+      if (historyIndex < history.length - 1) {
+        historyIndex++;
+        const img = new Image();
+        img.onload = () => {
+          ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+          ctx.globalCompositeOperation = 'source-over';
+          ctx.drawImage(img, 0, 0);
+          if (document.querySelector('.color-swatch[onclick*="erase"]').classList.contains('active')) {
+            ctx.globalCompositeOperation = 'destination-out';
+          }
+        };
+        img.src = history[historyIndex];
+      }
+    };
+
+    const flashSync = () => {
+      const el = document.getElementById('status-sync');
+      el.style.display = 'block';
+      setTimeout(() => el.style.display = 'none', 2000);
+    };
+
+    let currentSketchTarget = 'teeth'; // 'teeth' or 'perio'
+
+    window.toggleSketchMode = function(target = 'teeth') {
+      const canvas = document.getElementById('sketch-canvas');
+      const toolbar = document.getElementById('sketch-toolbar');
+      const isActive = canvas.style.display === 'block' && currentSketchTarget === target;
+
+      if (!isActive) {
+        currentSketchTarget = target;
+        const wrapperSelector = target === 'teeth' ? '.odontogram-wrapper' : '.perio-wrapper';
+        const container = document.querySelector(wrapperSelector);
+        
+        // Move canvas to this wrapper
+        container.appendChild(canvas);
+        
+        // Move toolbar before the wrapper's parent card content
+        const card = container.closest('.card');
+        const header = card.querySelector('div');
+        header.after(toolbar);
+
+        canvas.style.display = 'block';
+        toolbar.style.display = 'flex';
+        canvas.width = container.offsetWidth;
+        canvas.height = container.offsetHeight;
+        
+        window.initSketchEngine();
+        
+        // Load existing sketch
+        const p = patients.find(x => x.id === currentId);
+        if (p && p.teeth) {
+          const sketchData = target === 'teeth' ? p.teeth.sketch : p.teeth.perio_sketch;
+          if (sketchData) {
+            const img = new Image();
+            img.onload = () => {
+              ctx.drawImage(img, 0, 0);
+              history = [canvas.toDataURL()];
+              historyIndex = 0;
+            };
+            img.src = sketchData;
+          } else {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            history = [canvas.toDataURL()];
+            historyIndex = 0;
+          }
+        }
+      } else {
+        canvas.style.display = 'none';
+        toolbar.style.display = 'none';
+      }
+    };
+
+    window.saveSketch = async function() {
+      const canvas = document.getElementById('sketch-canvas');
+      const dataUrl = canvas.toDataURL('image/png', 0.5);
+      const p = patients.find(x => x.id === currentId);
+      
+      if(!p.teeth) p.teeth = {};
+      if (currentSketchTarget === 'teeth') {
+        p.teeth.sketch = dataUrl;
+      } else {
+        p.teeth.perio_sketch = dataUrl;
+      }
+      
+      flashSync();
+      const { error } = await _supabase.from('patients').update({ teeth: p.teeth }).eq('id', currentId);
+      if (error) alert("Error saving sketch: " + error.message);
+      else {
+        const statusSync = document.getElementById('status-sync');
+        statusSync.innerText = "✨ Clinical Notes Saved";
+        statusSync.style.display = 'block';
+        setTimeout(() => statusSync.style.display = 'none', 2000);
+      }
+    };
+
+    window.initSketchEngine = function() {
+      const canvas = document.getElementById('sketch-canvas');
+      ctx = canvas.getContext('2d');
+      ctx.lineWidth = 3;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+
+      const getPos = (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        
+        // Correctly calculate position relative to canvas size
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        
+        return { 
+          x: (clientX - rect.left) * scaleX, 
+          y: (clientY - rect.top) * scaleY 
+        };
+      };
+
+      const start = (e) => { isDrawing = true; const pos = getPos(e); ctx.beginPath(); ctx.moveTo(pos.x, pos.y); };
+      const draw = (e) => { if (!isDrawing) return; const pos = getPos(e); ctx.strokeStyle = sketchColor; ctx.lineTo(pos.x, pos.y); ctx.stroke(); };
+      const stop = () => { if (isDrawing) { isDrawing = false; saveHistory(); } };
+
+      canvas.onmousedown = start; canvas.onmousemove = draw; canvas.onmouseup = stop;
+      canvas.ontouchstart = (e) => { e.preventDefault(); start(e); }; 
+      canvas.ontouchmove = (e) => { e.preventDefault(); draw(e); }; 
+      canvas.ontouchend = (e) => { e.preventDefault(); stop(); };
+    };
+
+    window.setSketchColor = function(color, el) {
+      if (color === 'erase') {
+        ctx.globalCompositeOperation = 'destination-out';
+        ctx.lineWidth = 10;
+      } else {
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.lineWidth = 3;
+        sketchColor = color;
+      }
+      document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
+      el.classList.add('active');
+    };
+
+    window.clearSketch = function() {
+      if(confirm("Clear all drawing notes?")) {
+        ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+      }
+    };
+
+    window.handleLogin = async function() {
+      const email = document.getElementById('login-email').value;
+      const password = document.getElementById('login-pass').value;
+      const { error } = await _supabase.auth.signInWithPassword({ email, password });
+      if (error) {
+        const errEl = document.getElementById('auth-error');
+        errEl.innerText = error.message;
+        errEl.style.display = 'block';
+      } else {
+        window.checkSession();
+      }
+    };
+
+    window.loadStaff = async function() {
+      const body = document.getElementById('staff-table-body');
+      if (body && Object.keys(staff).length === 0) {
+        body.innerHTML = '<tr><td colspan="3"><div class="loading-container"><div class="spinner"></div>Updating staff directory...</div></td></tr>';
+      }
+      
+      const { data } = await _supabase.from('staff').select('*');
+      if (data) {
+        staff = data.reduce((acc, s) => {
+          acc[s.email] = s.name;
+          return acc;
+        }, {});
+        window.renderStaffList();
+      }
+    };
+
+    window.saveStaffName = async function() {
+      const email = document.getElementById('staff-email').value.trim();
+      const name = document.getElementById('staff-name').value.trim();
+      if (!email || !name) return alert("Both email and name are required");
+
+      flashSync();
+      const { error } = await _supabase.from('staff').upsert([{ email, name }], { onConflict: 'email' });
+      
+      if (error) {
+        alert("Error saving staff: " + error.message);
+      } else {
+        document.getElementById('staff-email').value = '';
+        document.getElementById('staff-name').value = '';
+        await window.loadStaff();
+        window.renderPatientList();
+      }
+    };
+
+    window.deleteStaff = async function(email) {
+      if (!confirm(`Remove staff entry for ${email}?`)) return;
+      flashSync();
+      await _supabase.from('staff').delete().eq('email', email);
+      await window.loadStaff();
+      window.renderPatientList();
+    };
+
+    window.renderStaffList = function() {
+      const body = document.getElementById('staff-table-body');
+      if(!body) return;
+      body.innerHTML = Object.entries(staff).map(([email, name]) => `
+        <tr>
+          <td>${email}</td>
+          <td style="font-weight: 600; color: var(--primary);">${name}</td>
+          <td style="text-align: right;">
+            <button class="btn" style="background: #ef4444; padding: 4px 10px; font-size: 11px;" onclick="window.deleteStaff('${email}')">Remove</button>
+          </td>
+        </tr>
+      `).join('');
+    };
+
+    window.toggleTheme = function() {
+      const isDark = document.body.classList.toggle('dark-mode');
+      localStorage.setItem('theme', isDark ? 'dark' : 'light');
+      window.updateThemeUI(isDark);
+    };
+
+    window.updateThemeUI = function(isDark) {
+      const icon = isDark ? 'sun' : 'moon';
+      document.getElementById('theme-icon').innerHTML = `<i data-lucide="${icon}"></i>`;
+      document.getElementById('theme-text').innerText = isDark ? 'Light Mode' : 'Dark Mode';
+      if(window.lucide) lucide.createIcons();
+    };
+
+    window.initTheme = function() {
+      const savedTheme = localStorage.getItem('theme');
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const isDark = savedTheme === 'dark' || (!savedTheme && prefersDark);
+      
+      if (isDark) {
+        document.body.classList.add('dark-mode');
+      } else {
+        document.body.classList.remove('dark-mode');
+      }
+      window.updateThemeUI(isDark);
+    };
+
+    window.addEventListener('DOMContentLoaded', () => {
+      if(window.lucide) lucide.createIcons();
+    });
+
+    window.checkSession = async function() {
+      window.initTheme();
+      const { data: { user } } = await _supabase.auth.getUser();
+      if (user) {
+        document.getElementById('login-view').style.display = 'none';
+        document.getElementById('app').style.display = 'grid';
+        document.getElementById('current-user-email').innerText = user.email;
+        // Parallel load for speed
+        Promise.all([window.loadStaff(), window.loadPatients()]);
+      }
+    };
+
+    window.loadPatients = async function() {
+      const body = document.getElementById('table-body');
+      if (body && patients.length === 0) {
+        body.innerHTML = '<tr><td colspan="5"><div class="loading-container"><div class="spinner"></div>Fetching clinical records...</div></td></tr>';
+      }
+
+      const { data } = await _supabase.from('patients').select('*').order('lname');
+      if (data) {
+        patients = data;
+        window.renderPatientList(patients);
+      }
+    };
+
+    window.filterPatients = function() {
+      const query = document.getElementById('patient-search').value.toLowerCase();
+      const filtered = patients.filter(p => {
+        const t = p.teeth || {};
+        const fullName = (p.fname + " " + p.lname).toLowerCase();
+        const phone = (t.phone || "").toLowerCase();
+        const blood = (t.bloodtype || "").toLowerCase();
+        return fullName.includes(query) || phone.includes(query) || blood.includes(query);
+      });
+      window.renderPatientList(filtered);
+    };
+
+    window.renderPatientList = function(listToRender) {
+      const body = document.getElementById('table-body');
+      const list = listToRender || patients;
+      
+      const grouped = list.reduce((acc, p) => {
+        const t = p.teeth || {};
+        const email = t.dentist_email || 'General / Unassigned';
+        if (!acc[email]) acc[email] = [];
+        acc[email].push(p);
+        return acc;
+      }, {});
+
+      const currentUserEmail = document.getElementById('current-user-email').innerText;
+      const sortedEmails = Object.keys(grouped).sort((a, b) => {
+        if (a === currentUserEmail) return -1;
+        if (b === currentUserEmail) return 1;
+        return a.localeCompare(b);
+      });
+
+      if (list.length === 0) {
+        body.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 40px; color: var(--text-muted);">No patients found matching your search.</td></tr>';
+        return;
+      }
+
+      body.innerHTML = sortedEmails.map(email => {
+        const groupList = grouped[email];
+        const displayName = staff[email] || email;
+        const headerRow = `
+          <tr style="background: var(--card-muted);">
+            <td colspan="5" style="padding: 12px; font-weight: 700; color: var(--text-main); border-bottom: 2px solid var(--border);">
+              👨‍⚕️ Dentist: <span style="color: var(--primary-light);">${email === currentUserEmail ? displayName + ' (You)' : displayName}</span>
+            </td>
+          </tr>
+        `;
+        
+        const rows = groupList.map(p => {
+          const statusColors = {
+            'Active': '#22c55e',
+            'Inactive': '#94a3b8',
+            'Completed': '#3b82f6',
+            'Emergency': '#ef4444'
+          };
+          const t = p.teeth || {};
+          const status = t.status || 'Active';
+          const phone = t.phone || "—";
+          const address = t.address || "—";
+          
+          return `
+            <tr>
+              <td style="font-weight: 600; padding-left: 24px;">${p.fname} ${p.lname}</td>
+              <td style="font-weight: 500; color: var(--primary-light);">${phone}</td>
+              <td><span style="background: ${statusColors[status] || '#f1f5f9'}; color: white; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700;">${status.toUpperCase()}</span></td>
+              <td style="color: var(--text-muted); font-size: 13px;">${address}</td>
+              <td style="text-align: right;">
+                <button class="btn" style="padding: 6px 16px; font-size: 13px;" onclick="window.openPatient('${p.id}')">View Chart</button>
+              </td>
+            </tr>
+          `;
+        }).join('');
+
+        return headerRow + rows;
+      }).join('');
+    };
+
+    window.calculateAge = function(dob) {
+      if(!dob) return "—";
+      const birthDate = new Date(dob);
+      const today = new Date();
+      let age = today.getFullYear() - birthDate.getFullYear();
+      const m = today.getMonth() - birthDate.getMonth();
+      if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--;
+      return age + " years old";
+    };
+
+    window.openPatient = function(id) {
+      currentId = id;
+      const p = patients.find(x => x.id === id);
+      const t = p.teeth || {};
+
+      document.getElementById('det-name').innerText = p.fname + " " + p.lname;
+      document.getElementById('edit-fname').value = p.fname;
+      document.getElementById('edit-lname').value = p.lname;
+
+      // Medical Alert Banner
+      const alertBanner = document.getElementById('medical-alert-banner');
+      const alertText = document.getElementById('alert-text-banner');
+      if (t.medical_alerts && t.medical_alerts.trim() !== "") {
+        alertBanner.classList.remove('hidden');
+        alertBanner.style.display = 'flex';
+        alertText.innerText = t.medical_alerts;
+      } else {
+        alertBanner.classList.add('hidden');
+        alertBanner.style.display = 'none';
+      }
+
+      // Populate Dentist Dropdown
+      const dentistSelect = document.getElementById('det-dentist-select');
+      const currentUserEmailNode = document.getElementById('current-user-email');
+      const currentUserEmail = currentUserEmailNode ? currentUserEmailNode.innerText : 'General';
+      const emails = new Set(patients.map(x => (x.teeth && x.teeth.dentist_email) || 'General / Unassigned'));
+      emails.add(currentUserEmail);
+      emails.add('General / Unassigned');
+      dentistSelect.innerHTML = Array.from(emails).map(e => {
+        const label = staff[e] || e;
+        return `<option value="${e}" ${t.dentist_email === e || (!t.dentist_email && e === 'General / Unassigned') ? 'selected' : ''}>${label}</option>`;
+      }).join('');
+
+      // Populate clinical fields
+      document.getElementById('det-phone').value = t.phone || "";
+      document.getElementById('det-dob').value = t.dob || "";
+      document.getElementById('det-age-display').innerText = window.calculateAge(t.dob);
+      document.getElementById('det-gender').value = t.gender || "";
+      document.getElementById('det-civil-status').value = t.civil_status || "";
+      document.getElementById('det-address').value = t.address || "";
+      document.getElementById('det-occupation').value = t.occupation || "";
+      document.getElementById('det-complaint').value = t.complaint || "";
+      document.getElementById('det-alerts').value = t.medical_alerts || "";
+      document.getElementById('det-status').value = t.status || 'Active';
+      document.getElementById('det-lastvisit').value = t.lastvisit || "";
+      document.getElementById('det-reason').value = t.reason || "";
+      document.getElementById('det-concern').value = t.concern || "";
+      document.getElementById('det-notes').value = t.notes || "";
+
+      // Reset Sketch Mode when switching patients
+      const canvas = document.getElementById('sketch-canvas');
+      const toolbar = document.getElementById('sketch-toolbar');
+      if (canvas) {
+        canvas.style.display = 'none';
+        toolbar.style.display = 'none';
+        if(ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+
+      window.renderImages(p);
+      window.toggleEditName(false);
+      window.renderOdontogram(p);
+      window.renderTreatmentHistory(p);
+      window.renderPerioChart(p);
+      window.showView('detail');
+    };      window.renderTreatmentHistory = function(p) {
+      const timeline = document.getElementById('treatment-timeline');
+      const msg = document.getElementById('no-treatment-msg');
+      const history = (p.teeth && p.teeth.history) || [];
+      const dentistSelect = document.getElementById('treat-dentist');
+
+      // Populate treatment dentist dropdown
+      const currentUserEmail = document.getElementById('current-user-email').innerText;
+      const emails = new Set(patients.map(x => (x.teeth && x.teeth.dentist_email) || 'General / Unassigned'));
+      emails.add(currentUserEmail);
+      dentistSelect.innerHTML = Array.from(emails).map(e => {
+        const label = staff[e] || e;
+        return `<option value="${e}" ${currentUserEmail === e ? 'selected' : ''}>${label}</option>`;
+      }).join('');
+
+      timeline.innerHTML = '<div style="position: absolute; left: 10px; top: 0; bottom: 0; width: 2px; background: var(--border);"></div>';
+
+      if (history.length === 0) {
+        msg.style.display = 'block';
+        timeline.style.display = 'none';
+      } else {
+        msg.style.display = 'none';
+        timeline.style.display = 'block';
+
+        // Sort history by date descending
+        const sortedHistory = [...history].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+        sortedHistory.forEach((entry, index) => {
+          const div = document.createElement('div');
+          div.style = 'position: relative; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid var(--border);';
+          div.innerHTML = `
+            <div style="position: absolute; left: -25px; top: 5px; width: 12px; height: 12px; border-radius: 50%; background: var(--primary-light); border: 3px solid var(--white); box-shadow: 0 0 0 2px var(--primary-light);"></div>
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+              <div>
+                <span style="font-size: 12px; font-weight: 800; color: var(--primary-light); text-transform: uppercase;">${entry.date} ${entry.time ? '| ' + entry.time : ''}</span>
+                <h4 style="margin: 4px 0; font-size: 16px; color: var(--text-main);">${entry.procedure}</h4>
+              </div>
+              <span style="font-size: 12px; font-weight: 600; background: var(--group-bg); padding: 4px 10px; border-radius: 6px; color: var(--text-muted); display: flex; align-items: center; gap: 6px;"><i data-lucide="user" style="width: 12px;"></i> ${staff[entry.dentist] || entry.dentist}</span>
+            </div>
+            <div style="display: flex; gap: 20px; margin-bottom: 10px; font-size: 13px; font-weight: 700;">
+              ${entry.debit ? `<span style="color: #ef4444;">Debit: ₱${entry.debit}</span>` : ''}
+              ${entry.credit ? `<span style="color: #22c55e;">Credit: ₱${entry.credit}</span>` : ''}
+              ${entry.balance ? `<span style="color: var(--primary-light);">Balance: ₱${entry.balance}</span>` : ''}
+            </div>
+            <p style="font-size: 14px; color: var(--text-muted); line-height: 1.5; margin: 0; white-space: pre-wrap;">${entry.notes}</p>
+            <button onclick="window.deleteTreatmentEntry(${index})" style="background: none; border: none; color: #ef4444; font-size: 11px; font-weight: 700; cursor: pointer; padding: 0; margin-top: 10px; opacity: 0.6;">Remove Entry</button>
+          `;
+          timeline.appendChild(div);
+        });
+        if(window.lucide) lucide.createIcons();
+      }
+      };
+
+      window.addTreatmentEntry = async function() {
+      const date = document.getElementById('treat-date').value;
+      const time = document.getElementById('treat-time').value;
+      const procedure = document.getElementById('treat-procedure').value;
+      const dentist = document.getElementById('treat-dentist').value;
+      const notes = document.getElementById('treat-notes').value;
+      const debit = document.getElementById('treat-debit').value;
+      const credit = document.getElementById('treat-credit').value;
+      const balance = document.getElementById('treat-balance').value;
+
+      if (!date || !procedure) return alert("Date and Procedure are required");
+
+      const p = patients.find(x => x.id === currentId);
+      if (!p.teeth) p.teeth = {};
+      if (!p.teeth.history) p.teeth.history = [];
+
+      p.teeth.history.push({ date, time, procedure, dentist, notes, debit, credit, balance });
+
+      flashSync();
+      const { error } = await _supabase.from('patients').update({ teeth: p.teeth }).eq('id', currentId);
+
+      if (error) {
+        alert("Error saving treatment: " + error.message);
+      } else {
+        document.getElementById('treatment-form-container').classList.add('hidden');
+        // Reset form
+        document.getElementById('treat-date').value = "";
+        document.getElementById('treat-time').value = "";
+        document.getElementById('treat-procedure').value = "";
+        document.getElementById('treat-notes').value = "";
+        document.getElementById('treat-debit').value = "";
+        document.getElementById('treat-credit').value = "";
+        document.getElementById('treat-balance').value = "";
+        window.renderTreatmentHistory(p);
+      }
+      };
+
+      window.deleteTreatmentEntry = async function(index) {
+      if (!confirm("Are you sure you want to delete this treatment entry?")) return;
+
+      const p = patients.find(x => x.id === currentId);
+      // Note: index is from sorted list, so we need to be careful. 
+      // For simplicity, I'll sort it the same way here.
+      const history = [...p.teeth.history].sort((a, b) => new Date(b.date) - new Date(a.date));
+      const entryToRemove = history[index];
+
+      // Find original index
+      const originalIndex = p.teeth.history.findIndex(e => e === entryToRemove);
+      p.teeth.history.splice(originalIndex, 1);
+
+      flashSync();
+      const { error } = await _supabase.from('patients').update({ teeth: p.teeth }).eq('id', currentId);
+
+      if (error) {
+        alert("Error deleting entry: " + error.message);
+      } else {
+        window.renderTreatmentHistory(p);
+      }
+      };
+
+      window.renderPerioChart = function(p) {
+       const container = document.getElementById('perio-visual-container');
+       const perio = (p.teeth && p.teeth.perio) || {};
+       
+       const shapes = {
+         molar: `<path d="M5,10 Q5,5 10,5 L22,5 Q27,5 27,10 L28,25 Q28,35 22,45 L10,45 Q4,35 4,25 Z M10,5 L10,15 M22,5 L22,15 M5,20 L27,20" />`,
+         premolar: `<path d="M7,12 Q7,5 12,5 L20,5 Q25,5 25,12 L26,25 Q26,35 20,45 L12,45 Q6,35 6,25 Z M16,5 L16,15" />`,
+         canine: `<path d="M8,15 Q16,2 24,15 L25,30 Q25,48 16,48 Q7,48 7,30 Z" />`,
+         incisor: `<path d="M8,8 L24,8 L25,30 Q25,48 16,48 Q7,48 7,30 Z" />`
+       };
+
+       const getToothType = (n) => {
+         if ([1,2,3,14,15,16,17,18,19,30,31,32].includes(n)) return 'molar';
+         if ([4,5,12,13,20,21,28,29].includes(n)) return 'premolar';
+         if ([6,11,22,27].includes(n)) return 'canine';
+         return 'incisor';
+       };
+
+       const createSection = (title, range) => {
+         let sectionHtml = `
+           <div>
+             <h4 style="font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 15px;">${title}</h4>
+             <div style="display: grid; grid-template-columns: repeat(16, 1fr); gap: 10px; overflow-x: auto; padding-bottom: 10px;">
+         `;
+
+         range.forEach(i => {
+           const type = getToothType(i);
+           const ufVal = perio[`uf-${i}`] || '';
+           const lfVal = perio[`lf-${i}`] || '';
+           
+           sectionHtml += `
+             <div style="display: flex; flex-direction: column; align-items: center; gap: 8px; min-width: 45px;">
+               <span style="font-size: 10px; font-weight: 800; color: var(--text-muted);">${i}</span>
+               <input type="number" id="perio-uf-${i}" value="${ufVal}" placeholder="B" style="width: 100%; height: 28px; padding: 2px; margin: 0; text-align: center; font-size: 11px; border-radius: 4px; border: 1px solid var(--border);" min="0" max="15">
+               <svg class="tooth-svg" viewBox="0 0 32 50" style="width: 20px; height: 32px; opacity: 0.5;">
+                 ${shapes[type]}
+               </svg>
+               <input type="number" id="perio-lf-${i}" value="${lfVal}" placeholder="L" style="width: 100%; height: 28px; padding: 2px; margin: 0; text-align: center; font-size: 11px; border-radius: 4px; border: 1px solid var(--border);" min="0" max="15">
+             </div>
+           `;
+         });
+
+         sectionHtml += `</div></div>`;
+         return sectionHtml;
+       };
+
+       container.innerHTML = 
+         createSection('Upper Teeth (Maxillary)', [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]) +
+         createSection('Lower Teeth (Mandibular)', [32,31,30,29,28,27,26,25,24,23,22,21,20,19,18,17]);
+
+       // Apply styling and live updates
+       container.querySelectorAll('input').forEach(input => {
+         const updateStyle = (val) => {
+           const v = parseInt(val);
+           input.style.color = v > 3 ? '#ef4444' : 'var(--text-main)';
+           input.style.background = v > 5 ? '#fee2e2' : 'var(--white)';
+           input.style.fontWeight = v > 5 ? '800' : '500';
+           input.style.borderColor = v > 3 ? '#ef4444' : 'var(--border)';
+         };
+         
+         updateStyle(input.value);
+         input.oninput = (e) => updateStyle(e.target.value);
+       });
+     };
+
+     window.savePerioData = async function() {
+       const p = patients.find(x => x.id === currentId);
+       if (!p.teeth) p.teeth = {};
+       if (!p.teeth.perio) p.teeth.perio = {};
+       
+       const inputs = document.getElementById('perio-visual-container').querySelectorAll('input');
+       inputs.forEach(input => {
+         const id = input.id.replace('perio-', '');
+         p.teeth.perio[id] = input.value;
+       });
+
+       flashSync();
+       const { error } = await _supabase.from('patients').update({ teeth: p.teeth }).eq('id', currentId);
+       if (error) alert("Error saving perio data: " + error.message);
+       else {
+         const statusSync = document.getElementById('status-sync');
+         statusSync.innerText = "✨ Perio Record Saved";
+         statusSync.style.display = 'block';
+         setTimeout(() => statusSync.style.display = 'none', 2000);
+         window.renderPerioChart(p);
+       }
+     };
+
+     let currentEditIndex = null;
+    window.renderImages = function(p) {
+      const gallery = document.getElementById('image-gallery');
+      const msg = document.getElementById('no-images-msg');
+      const images = (p.teeth && p.teeth.images) || [];
+      gallery.innerHTML = '';
+      if (images.length === 0) {
+        msg.style.display = 'block';
+      } else {
+        msg.style.display = 'none';
+        images.forEach((imgObj, index) => {
+          const isLegacy = typeof imgObj === 'string';
+          const data = isLegacy ? imgObj : imgObj.data;
+          const category = isLegacy ? 'Uncategorized' : imgObj.category;
+          const note = isLegacy ? '' : imgObj.note;
+          const date = isLegacy ? 'Legacy' : imgObj.date;
+
+          const div = document.createElement('div');
+          div.style = 'background: white; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; box-shadow: var(--shadow); transition: transform 0.2s;';
+          div.innerHTML = `
+            <div style="aspect-ratio: 16/9; overflow: hidden; background: #000; cursor: pointer;" onclick="window.openFullImage('${data}', '${category}', '${note.replace(/'/g, "\\'")}')">
+              <img src="${data}" style="width: 100%; height: 100%; object-fit: contain;">
+            </div>
+            <div style="padding: 15px; position: relative;">
+              <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px;">
+                <span style="font-size: 10px; font-weight: 800; text-transform: uppercase; color: var(--primary-light); letter-spacing: 0.5px;">${category}</span>
+                <span style="font-size: 10px; color: var(--text-muted); font-weight: 600;">${date}</span>
+              </div>
+              <p style="font-size: 13px; font-weight: 500; color: var(--text-main); margin: 0 0 12px; line-height: 1.4; min-height: 1.4em;">${note || '<i style="opacity: 0.5;">No findings recorded.</i>'}</p>
+              <div style="display: flex; gap: 12px; border-top: 1px solid var(--border); padding-top: 12px;">
+                <button onclick="window.editPhoto(${index})" style="background: none; border: none; color: var(--primary-light); font-size: 11px; font-weight: 700; cursor: pointer; padding: 0;">Edit Details</button>
+                <button onclick="window.deletePhoto(${index})" style="background: none; border: none; color: #ef4444; font-size: 11px; font-weight: 700; cursor: pointer; padding: 0;">Remove</button>
+              </div>
+            </div>
+          `;
+          gallery.appendChild(div);
+        });
+      }
+    };
+
+    window.openFullImage = function(src, category, note) {
+      const viewer = document.getElementById('image-viewer');
+      const img = document.getElementById('viewer-img');
+      const catEl = document.getElementById('viewer-category');
+      const noteEl = document.getElementById('viewer-note');
+      
+      img.src = src;
+      catEl.innerText = category;
+      noteEl.innerText = note || "No clinical notes.";
+      
+      viewer.style.display = 'flex';
+      viewer.classList.remove('hidden');
+      document.body.style.overflow = 'hidden'; // Prevent scroll
+    };
+
+    window.closeImageViewer = function() {
+      const viewer = document.getElementById('image-viewer');
+      viewer.style.display = 'none';
+      viewer.classList.add('hidden');
+      document.body.style.overflow = 'auto';
+    };
+
+    window.editPhoto = function(index) {
+      const p = patients.find(x => x.id === currentId);
+      const imgObj = p.teeth.images[index];
+      currentEditIndex = index;
+      
+      const isLegacy = typeof imgObj === 'string';
+      document.getElementById('edit-photo-category').value = isLegacy ? 'Other' : imgObj.category;
+      document.getElementById('edit-photo-note').value = isLegacy ? '' : (imgObj.note || '');
+      
+      const modal = document.getElementById('edit-photo-modal');
+      modal.style.display = 'flex';
+      modal.classList.remove('hidden');
+    };
+
+    window.closePhotoEdit = function() {
+      const modal = document.getElementById('edit-photo-modal');
+      modal.style.display = 'none';
+      modal.classList.add('hidden');
+      currentEditIndex = null;
+    };
+
+    window.savePhotoEdit = async function() {
+      if (currentEditIndex === null) return;
+      
+      const p = patients.find(x => x.id === currentId);
+      const imgObj = p.teeth.images[currentEditIndex];
+      const category = document.getElementById('edit-photo-category').value;
+      const note = document.getElementById('edit-photo-note').value.trim();
+      const fileInput = document.getElementById('edit-photo-file');
+      const newFile = fileInput.files[0];
+
+      const finalizeUpdate = async (imageData) => {
+        if (typeof imgObj === 'string') {
+          p.teeth.images[currentEditIndex] = {
+            data: imageData || imgObj,
+            category: category,
+            note: note,
+            date: 'Updated'
+          };
+        } else {
+          if (imageData) imgObj.data = imageData;
+          imgObj.category = category;
+          imgObj.note = note;
+          if (imageData) imgObj.date = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + ' (Updated)';
+        }
+
+        flashSync();
+        const { error } = await _supabase.from('patients').update({ teeth: p.teeth }).eq('id', currentId);
+        
+        if (error) {
+          alert("Failed to update record: " + error.message);
+        } else {
+          fileInput.value = '';
+          window.closePhotoEdit();
+          window.renderImages(p);
+        }
+      };if (newFile) {
+        if (newFile.size > 1.5 * 1024 * 1024) return alert("New image is too large. Please keep it under 1.5MB.");
+        const reader = new FileReader();
+        reader.onload = (e) => finalizeUpdate(e.target.result);
+        reader.readAsDataURL(newFile);
+      } else {
+        finalizeUpdate();
+      }
+    };
+
+    window.processPhotoUpload = async function() {
+      const fileInput = document.getElementById('photo-file');
+      const categoryInput = document.getElementById('photo-category');
+      const noteInput = document.getElementById('photo-note');
+      const file = fileInput.files[0];
+
+      if (!file || !currentId) return alert("Please select an image file first.");
+      if (file.size > 1.5 * 1024 * 1024) return alert("Image is too large. Clinical images should be optimized under 1.5MB.");
+
+      const p = patients.find(x => x.id === currentId);
+      const reader = new FileReader();
+      
+      reader.onload = async (e) => {
+        const newPhoto = {
+          data: e.target.result,
+          category: categoryInput.value,
+          note: noteInput.value.trim(),
+          date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+        };
+
+        if (!p.teeth) p.teeth = {};
+        if (!p.teeth.images) p.teeth.images = [];
+        p.teeth.images.unshift(newPhoto); // Add to top
+
+        flashSync();
+        const { error } = await _supabase.from('patients').update({ teeth: p.teeth }).eq('id', currentId);
+        
+        if (error) {
+          alert("Documentation failed: " + error.message);
+        } else {
+          // Reset inputs
+          fileInput.value = '';
+          noteInput.value = '';
+          document.getElementById('photo-upload-container').classList.add('hidden');
+          window.renderImages(p);
+        }
+      };
+      reader.readAsDataURL(file);
+    };
+
+    window.uploadPhoto = async function(file) {
+      // Legacy function redirect
+      document.getElementById('photo-upload-container').classList.remove('hidden');
+      document.getElementById('photo-file').files = [file];
+    };
+
+    window.deletePhoto = async function(index) {
+      if (!confirm("Remove this clinical image from the record?")) return;
+      const p = patients.find(x => x.id === currentId);
+      p.teeth.images.splice(index, 1);
+      
+      flashSync();
+      const { error } = await _supabase.from('patients').update({ teeth: p.teeth }).eq('id', currentId);
+      if (error) {
+        alert("Delete failed: " + error.message);
+      } else {
+        window.renderImages(p);
+      }
+    };
+
+    window.toggleEditName = function(edit) {
+      document.getElementById('det-name-display').classList.toggle('hidden', edit);
+      document.getElementById('det-name-edit').classList.toggle('hidden', !edit);
+    };
+
+    window.saveName = async function() {
+      const fname = document.getElementById('edit-fname').value;
+      const lname = document.getElementById('edit-lname').value;
+      if(!fname || !lname) return alert("Names cannot be empty");
+      
+      flashSync();
+      const { error } = await _supabase.from('patients').update({ fname, lname }).eq('id', currentId);
+      
+      if (error) {
+        alert("Error updating name: " + error.message);
+      } else {
+        const p = patients.find(x => x.id === currentId);
+        p.fname = fname;
+        p.lname = lname;
+        document.getElementById('det-name').innerText = fname + " " + lname;
+        window.toggleEditName(false);
+        window.loadPatients();
+      }
+    };
+
+    window.deletePatient = async function(id) {
+      if(!confirm("Are you sure you want to delete this patient? This action cannot be undone.")) return;
+      flashSync();
+      const { error } = await _supabase.from('patients').delete().eq('id', id);
+      if (error) {
+        alert("Error deleting patient: " + error.message);
+      } else {
+        window.showView('list');
+        window.loadPatients();
+      }
+    };
+
+    window.updateClinicalField = async function(field, value) {
+      if(!currentId) return;
+      const p = patients.find(x => x.id === currentId);
+      if(!p) return;
+      
+      if(!p.teeth) p.teeth = {};
+      if(p.teeth[field] === value) return; // No change
+      
+      p.teeth[field] = value;
+
+      // Special handling for medical alert banner update
+      if (field === 'medical_alerts') {
+        const alertBanner = document.getElementById('medical-alert-banner');
+        const alertText = document.getElementById('alert-text-banner');
+        if (value && value.trim() !== "") {
+          alertBanner.classList.remove('hidden');
+          alertBanner.style.display = 'flex';
+          alertText.innerText = value;
+        } else {
+          alertBanner.classList.add('hidden');
+          alertBanner.style.display = 'none';
+        }
+      }
+
+      if (field === 'dob') {
+        document.getElementById('det-age-display').innerText = window.calculateAge(value);
+      }
+      
+      // Immediately reflect in directory UI (local state)
+      window.renderPatientList();
+      
+      flashSync();
+      const { error } = await _supabase.from('patients').update({ teeth: p.teeth }).eq('id', currentId);
+      if (error) {
+        alert("Error updating field: " + error.message);
+      }
+    };
+
+    window.renderOdontogram = function(p) {
+      const upper = document.getElementById('jaw-upper');
+      const lower = document.getElementById('jaw-lower');
+      upper.innerHTML = '';
+      lower.innerHTML = '';
+
+      const shapes = {
+        molar: `<path d="M5,10 Q5,5 10,5 L22,5 Q27,5 27,10 L28,25 Q28,35 22,45 L10,45 Q4,35 4,25 Z M10,5 L10,15 M22,5 L22,15 M5,20 L27,20" />`,
+        premolar: `<path d="M7,12 Q7,5 12,5 L20,5 Q25,5 25,12 L26,25 Q26,35 20,45 L12,45 Q6,35 6,25 Z M16,5 L16,15" />`,
+        canine: `<path d="M8,15 Q16,2 24,15 L25,30 Q25,48 16,48 Q7,48 7,30 Z" />`,
+        incisor: `<path d="M8,8 L24,8 L25,30 Q25,48 16,48 Q7,48 7,30 Z" />`
+      };
+
+      const getToothType = (n) => {
+        if ([1,2,3,14,15,16,17,18,19,30,31,32].includes(n)) return 'molar';
+        if ([4,5,12,13,20,21,28,29].includes(n)) return 'premolar';
+        if ([6,11,22,27].includes(n)) return 'canine';
+        return 'incisor';
+      };
+
+      const getCoords = (n) => {
+        const cx = 50; 
+        let angle, rx, ry, tx, ty;
+
+        if (n <= 16) { 
+          const index = n - 1;
+          angle = (index / 15) * Math.PI; 
+          rx = 42; 
+          ry = 80; 
+          tx = cx + rx * Math.cos(angle + Math.PI); 
+          ty = 90 - ry * Math.sin(angle); 
+          return { x: tx, y: ty, size: [1,2,3,14,15,16].includes(n) ? 42 : 32 };
+        } else { 
+          const index = 32 - n;
+          angle = (index / 15) * Math.PI;
+          rx = 42;
+          ry = 80;
+          tx = cx + rx * Math.cos(angle + Math.PI);
+          ty = 10 + ry * Math.sin(angle);
+          return { x: tx, y: ty, size: [17,18,19,30,31,32].includes(n) ? 42 : 32 };
+        }
+      };
+
+      for(let i=1; i<=32; i++) {
+        const coords = getCoords(i);
+        const div = document.createElement('div');
+        const status = (p.teeth && p.teeth[i]) || '';
+        const type = getToothType(i);
+
+        div.className = `tooth-cell ${status}`;
+        div.style.left = `${coords.x}%`;
+        div.style.top = `${coords.y}%`;
+        div.style.width = `${coords.size}px`;
+        div.style.height = `${coords.size * 1.4}px`;
+        div.style.transform = `translate(-50%, -50%) rotate(${i <= 16 ? (i-8.5)*12 : (24.5-i)*12}deg)`;
+
+        div.innerHTML = `
+          <span>${i}</span>
+          <svg class="tooth-svg" viewBox="0 0 32 50">
+            ${shapes[type]}
+          </svg>
+        `;
+
+        div.onclick = () => {
+          const cycle = ['', 'decay', 'filled'];
+          const next = cycle[(cycle.indexOf(status) + 1) % cycle.length];
+          if(!p.teeth) p.teeth = {};
+          p.teeth[i] = next;
+          window.renderOdontogram(p);
+          flashSync();
+          _supabase.from('patients').update({ teeth: p.teeth }).eq('id', currentId).then(({error}) => {
+            if (error) alert("Error syncing: " + error.message);
+          });
+        };
+
+        if(i <= 16) upper.appendChild(div);
+        else lower.appendChild(div);
+      }
+    };
+    window.toggleMenu = function(open) {
+      const sidebar = document.getElementById('sidebar');
+      const overlay = document.getElementById('sidebar-overlay');
+      const closeBtn = document.getElementById('close-menu-btn');
+      
+      if (open) {
+        sidebar.classList.add('open');
+        overlay.classList.add('active');
+        closeBtn.style.display = 'block';
+      } else {
+        sidebar.classList.remove('open');
+        overlay.classList.remove('active');
+        closeBtn.style.display = 'none';
+      }
+    };
+
+    // Game Library Logic
+    let currentGame = null;
+
+    window.launchGame = function(game) {
+      currentGame = game;
+      document.getElementById('game-library').style.display = 'none';
+      document.getElementById('break-room-back').style.display = 'block';
+      document.getElementById('game-reset-btn').style.display = 'block';
+      
+      const solitaireBtn = document.querySelector('#view-solitaire .btn[onclick*="initSolitaire"]');
+      if (game === 'solitaire') {
+        document.getElementById('solitaire-game-container').style.display = 'block';
+        document.getElementById('doom-game-container').style.display = 'none';
+        document.getElementById('mk-game-container').style.display = 'none';
+        if(solitaireBtn) solitaireBtn.style.display = 'block';
+        window.initSolitaire();
+      } else if (game === 'doom') {
+        document.getElementById('solitaire-game-container').style.display = 'none';
+        document.getElementById('doom-game-container').style.display = 'block';
+        document.getElementById('mk-game-container').style.display = 'none';
+        if(solitaireBtn) solitaireBtn.style.display = 'none';
+        // Show overlay if not already playing
+        if (!doomLoopId) {
+          document.getElementById('doom-overlay').style.display = 'flex';
+        }
+      } else if (game === 'mk') {
+        document.getElementById('solitaire-game-container').style.display = 'none';
+        document.getElementById('doom-game-container').style.display = 'none';
+        document.getElementById('mk-game-container').style.display = 'block';
+        if(solitaireBtn) solitaireBtn.style.display = 'none';
+        if (!mkLoopId) {
+          document.getElementById('mk-overlay').style.display = 'flex';
+        }
+      }
+    };
+
+    window.showGameLibrary = function() {
+      currentGame = null;
+      document.getElementById('game-library').style.display = 'grid';
+      document.getElementById('solitaire-game-container').style.display = 'none';
+      document.getElementById('doom-game-container').style.display = 'none';
+      document.getElementById('mk-game-container').style.display = 'none';
+      document.getElementById('break-room-back').style.display = 'none';
+      document.getElementById('game-reset-btn').style.display = 'none';
+      
+      const solitaireBtn = document.querySelector('#view-solitaire .btn[onclick*="initSolitaire"]');
+      if(solitaireBtn) solitaireBtn.style.display = 'block';
+      if (doomLoopId) {
+        cancelAnimationFrame(doomLoopId);
+        doomLoopId = null;
+      }
+      if (mkLoopId) {
+        cancelAnimationFrame(mkLoopId);
+        mkLoopId = null;
+      }
+    };
+
+    window.resetCurrentGame = function() {
+      if (currentGame === 'solitaire') {
+        window.initSolitaire();
+      } else if (currentGame === 'doom') {
+        window.startDoom();
+      } else if (currentGame === 'mk') {
+        window.startMK();
+      }
+    };
+
+    // --- GLOBAL GAME INPUT ---
+    let keys = {};
+    window.addEventListener('keydown', (e) => {
+      keys[e.code] = true;
+      if(['KeyW','KeyA','KeyS','KeyD','Space','KeyJ','KeyK','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code)) {
+        if (currentGame && currentGame !== 'solitaire') e.preventDefault();
+      }
+    });
+    window.addEventListener('keyup', (e) => keys[e.code] = false);
+
+    // --- DOOM LITE ENGINE (Dental Edition) ---
+    let doomLoopId = null;
+    let doomCanvas, dctx;
+    const mapSize = 16;
+    const doomMap = [
+      1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+      1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,
+      1,0,1,1,1,1,0,0,0,0,1,1,1,1,0,1,
+      1,0,1,0,0,1,0,1,1,0,1,0,0,1,0,1,
+      1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
+      1,0,1,0,0,1,0,1,1,0,1,0,0,1,0,1,
+      1,0,1,1,1,1,0,0,0,0,1,1,1,1,0,1,
+      1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,
+      1,0,1,1,1,1,0,0,0,0,1,1,1,1,0,1,
+      1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,
+      1,1,1,0,1,1,1,1,1,1,1,1,0,1,1,1,
+      1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
+      1,0,1,1,0,1,1,1,1,1,1,0,1,1,0,1,
+      1,0,1,1,0,0,0,0,0,0,0,0,1,1,0,1,
+      1,0,0,0,0,0,1,1,1,1,0,0,0,0,0,1,
+      1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+    ];
+
+    let playerX = 1.5, playerY = 1.5, dirX = 1, dirY = 0, planeX = 0, planeY = 0.66;
+    let bacteria = [];
+    let pickups = [];
+    let clinicDecor = [];
+    let doomAmmo = 100, doomHealth = 100, doomKills = 0;
+    let zBuffer = new Array(640);
+    let walkCycle = 0;
+    let weaponRecoil = 0;
+    let muzzleFlash = 0;
+    let doomGameState = 'playing';
+
+    function generateClinicalTexture(size = 64) {
+      const canvas = document.createElement('canvas');
+      canvas.width = canvas.height = size;
+      const tctx = canvas.getContext('2d');
+      tctx.fillStyle = '#f8fafc';
+      tctx.fillRect(0, 0, size, size);
+      
+      const imageData = tctx.getImageData(0, 0, size, size);
+      for (let i = 0; i < imageData.data.length; i += 4) {
+        const n = (Math.random() - 0.5) * 8;
+        imageData.data[i] += n;
+        imageData.data[i+1] += n;
+        imageData.data[i+2] += n;
+      }
+      tctx.putImageData(imageData, 0, 0);
+      
+      tctx.strokeStyle = 'rgba(0,31,92,0.1)';
+      tctx.lineWidth = 2;
+      tctx.strokeRect(0, 0, size, size);
+      
+      const img = new Image();
+      img.src = canvas.toDataURL();
+      return img;
+    }
+
+    // Texture Assets
+    const textures = {
+      wall: generateClinicalTexture(),
+    };
+
+    window.startDoom = function() {
+      document.getElementById('doom-overlay').style.display = 'none';
+      doomCanvas = document.getElementById('doom-canvas');
+      dctx = doomCanvas.getContext('2d');
+      if (!dctx) return;
+      doomCanvas.width = 640;
+      doomCanvas.height = 400;
+
+      // Safe Starting Position
+      playerX = 1.5; playerY = 1.5; dirX = 1; dirY = 0; planeX = 0; planeY = 0.66;
+      doomAmmo = 100;
+      doomHealth = 100;
+      doomKills = 0;
+      walkCycle = 0;
+      weaponRecoil = 0;
+      muzzleFlash = 0;
+      doomGameState = 'playing';
+
+      // Spawn Bacteria
+      bacteria = [];
+      for(let i=0; i<15; i++) {
+        let bx, by;
+        do {
+          bx = Math.random() * (mapSize-2) + 1;
+          by = Math.random() * (mapSize-2) + 1;
+        } while(doomMap[Math.floor(bx) + Math.floor(by)*mapSize] !== 0 || (Math.abs(bx-playerX) < 2 && Math.abs(by-playerY) < 2));
+        bacteria.push({x: bx, y: by, alive: true, type: Math.random() > 0.5 ? 'bacteria' : 'plaque', phase: Math.random()*Math.PI*2});
+      }
+
+      // Spawn Pickups
+      pickups = [];
+      for(let i=0; i<8; i++) {
+        let px, py;
+        do {
+          px = Math.random() * (mapSize-2) + 1;
+          py = Math.random() * (mapSize-2) + 1;
+        } while(doomMap[Math.floor(px) + Math.floor(py)*mapSize] !== 0);
+        pickups.push({x: px, y: py, active: true, type: Math.random() > 0.5 ? 'health' : 'ammo'});
+      }
+
+      // Clinic Decoration (Chairs, Lamps, Cabinets)
+      clinicDecor = [];
+      for(let i=0; i<20; i++) {
+        let dx, dy;
+        do {
+          dx = Math.random() * (mapSize-2) + 1;
+          dy = Math.random() * (mapSize-2) + 1;
+        } while(doomMap[Math.floor(dx) + Math.floor(dy)*mapSize] !== 0);
+        const types = ['chair', 'lamp', 'cabinet', 'xray'];
+        clinicDecor.push({x: dx, y: dy, type: types[Math.floor(Math.random()*types.length)]});
+      }
+
+      if(!window.doomEventsAttached) {
+        window.addEventListener('keydown', (e) => {
+          keys[e.code] = true;
+          // Prevent scrolling with WASD/Space
+          if(['KeyW','KeyA','KeyS','KeyD','Space'].includes(e.code)) e.preventDefault();
+        });
+        window.addEventListener('keyup', (e) => keys[e.code] = false);
+        window.doomEventsAttached = true;
+      }
+
+      window.updateDoomUI();
+      if (doomLoopId) cancelAnimationFrame(doomLoopId);
+      doomLoop();
+    };
+
+    window.updateDoomUI = function() {
+      if (document.getElementById('doom-ammo')) document.getElementById('doom-ammo').innerText = Math.floor(doomAmmo);
+      if (document.getElementById('doom-health')) document.getElementById('doom-health').innerText = Math.ceil(doomHealth) + '%';
+      if (document.getElementById('doom-kills')) document.getElementById('doom-kills').innerText = doomKills;
+    };
+
+    function doomLoop() {
+      if (doomGameState === 'playing') {
+        updateDoom();
+      }
+      drawDoom();
+      if(document.getElementById('doom-game-container').style.display !== 'none') {
+        doomLoopId = requestAnimationFrame(doomLoop);
+      } else {
+        doomLoopId = null;
+      }
+    }
+
+    function updateDoom() {
+      const moveSpeed = 0.08, rotSpeed = 0.05;
+      let isMoving = false;
+
+      const canMove = (nx, ny) => {
+        const p = 0.25;
+        if (nx < p || nx > mapSize-p || ny < p || ny > mapSize-p) return false;
+        if (doomMap[Math.floor(nx+p) + Math.floor(ny+p)*mapSize] !== 0) return false;
+        if (doomMap[Math.floor(nx-p) + Math.floor(ny+p)*mapSize] !== 0) return false;
+        if (doomMap[Math.floor(nx+p) + Math.floor(ny-p)*mapSize] !== 0) return false;
+        if (doomMap[Math.floor(nx-p) + Math.floor(ny-p)*mapSize] !== 0) return false;
+        return true;
+      };
+
+      if (keys['KeyW']) {
+        let nx = playerX + dirX * moveSpeed;
+        let ny = playerY + dirY * moveSpeed;
+        if (canMove(nx, playerY)) playerX = nx;
+        if (canMove(playerX, ny)) playerY = ny;
+        isMoving = true;
+      }
+      if (keys['KeyS']) {
+        let nx = playerX - dirX * moveSpeed;
+        let ny = playerY - dirY * moveSpeed;
+        if (canMove(nx, playerY)) playerX = nx;
+        if (canMove(playerX, ny)) playerY = ny;
+        isMoving = true;
+      }
+
+      const rotate = (angle) => {
+        let oldDirX = dirX;
+        dirX = dirX * Math.cos(angle) - dirY * Math.sin(angle);
+        dirY = oldDirX * Math.sin(angle) + dirY * Math.cos(angle);
+        let oldPlaneX = planeX;
+        planeX = planeX * Math.cos(angle) - planeY * Math.sin(angle);
+        planeY = oldPlaneX * Math.sin(angle) + planeY * Math.cos(angle);
+      };
+
+      if (keys['KeyA'] || keys['ArrowLeft']) rotate(-rotSpeed);
+      if (keys['KeyD'] || keys['ArrowRight']) rotate(rotSpeed);
+
+      if (keys['Space'] && doomAmmo > 0 && weaponRecoil <= 0) {
+        doomAmmo--;
+        weaponRecoil = 15;
+        muzzleFlash = 1.0;
+        window.updateDoomUI();
+
+        // Pulse the status core on fire
+        const core = document.getElementById('doom-status-core');
+        if(core) {
+          core.style.transform = 'scale(1.5)';
+          setTimeout(() => core.style.transform = 'scale(1)', 100);
+        }
+
+        bacteria.forEach(b => {          if(!b.alive) return;
+          let dx = b.x - playerX;
+          let dy = b.y - playerY;
+          let dist = Math.sqrt(dx*dx + dy*dy);
+          let angleToB = Math.atan2(dy, dx);
+          let anglePlayer = Math.atan2(dirY, dirX);
+          let angleDiff = angleToB - anglePlayer;
+          while(angleDiff < -Math.PI) angleDiff += Math.PI*2;
+          while(angleDiff > Math.PI) angleDiff -= Math.PI*2;
+
+          if(Math.abs(angleDiff) < 0.35 && dist < 8) {
+            b.alive = false;
+            doomKills++;
+            window.updateDoomUI();
+            if (bacteria.filter(x => x.alive).length === 0) doomGameState = 'won';
+          }
+        });
+        setTimeout(() => { if(document.getElementById('doom-face')) document.getElementById('doom-face').innerText = '🦷'; }, 200);
+      }
+
+      bacteria.forEach(b => {
+        if(!b.alive) return;
+        b.phase += 0.05;
+        let dist = Math.sqrt((b.x-playerX)**2 + (b.y-playerY)**2);
+        if(dist < 0.6) {
+          doomHealth -= 0.25;
+          window.updateDoomUI();
+          if (doomHealth <= 0) doomGameState = 'lost';
+        }
+        if(Math.random() > 0.96) {
+          let nx = b.x + (Math.random()-0.5)*0.3;
+          let ny = b.y + (Math.random()-0.5)*0.3;
+          if(canMove(nx, ny)) { b.x = nx; b.y = ny; }
+        }
+      });
+
+      pickups.forEach(p => {
+        if(!p.active) return;
+        if(Math.sqrt((p.x-playerX)**2 + (p.y-playerY)**2) < 0.6) {
+          p.active = false;
+          if(p.type === 'health') doomHealth = Math.min(100, doomHealth + 30);
+          else doomAmmo = Math.min(200, doomAmmo + 50);
+          window.updateDoomUI();
+        }
+      });
+
+      if (isMoving) walkCycle += 0.15;
+      if (weaponRecoil > 0) weaponRecoil -= 2;
+      if (muzzleFlash > 0) muzzleFlash -= 0.1;
+    }
+
+    function drawDoom() {
+      if (!dctx) return;
+
+      // Ceiling (Dental Clinic White Panels)
+      dctx.fillStyle = '#f1f5f9';
+      dctx.fillRect(0, 0, 640, 200);
+      dctx.fillStyle = '#cbd5e1';
+      for(let i=0; i<640; i+=80) {
+        let xOff = (playerX * 40) % 80;
+        dctx.fillRect(i - xOff, 0, 2, 200);
+      }
+
+      // Floor (Clinic Blue Tiles)
+      dctx.fillStyle = '#1e293b';
+      dctx.fillRect(0, 200, 640, 200);
+      dctx.fillStyle = '#334155';
+      for(let i=0; i<200; i+=20) {
+         dctx.fillRect(0, 200 + i, 640, 1);
+      }
+
+      // Walls
+      for (let x = 0; x < 640; x++) {
+        let cameraX = 2 * x / 640 - 1;
+        let rayDirX = dirX + planeX * cameraX;
+        let rayDirY = dirY + planeY * cameraX;
+        let mapX = Math.floor(playerX), mapY = Math.floor(playerY);
+        let deltaDistX = Math.abs(1 / rayDirX), deltaDistY = Math.abs(1 / rayDirY);
+        let stepX, stepY, sideDistX, sideDistY, hit = 0, side;
+
+        if (rayDirX < 0) { stepX = -1; sideDistX = (playerX - mapX) * deltaDistX; }
+        else { stepX = 1; sideDistX = (mapX + 1.0 - playerX) * deltaDistX; }
+        if (rayDirY < 0) { stepY = -1; sideDistY = (playerY - mapY) * deltaDistY; }
+        else { stepY = 1; sideDistY = (mapY + 1.0 - playerY) * deltaDistY; }
+
+        let safety = 0;
+        while (hit === 0 && safety < 100) {
+          safety++;
+          if (sideDistX < sideDistY) { sideDistX += deltaDistX; mapX += stepX; side = 0; }
+          else { sideDistY += deltaDistY; mapY += stepY; side = 1; }
+          if (mapX < 0 || mapX >= mapSize || mapY < 0 || mapY >= mapSize) hit = 1;
+          else if (doomMap[mapX + mapY * mapSize] > 0) hit = 1;
+        }
+
+        let perpWallDist = side === 0 ? (mapX - playerX + (1 - stepX) / 2) / rayDirX : (mapY - playerY + (1 - stepY) / 2) / rayDirY;
+        zBuffer[x] = perpWallDist;
+        let lineHeight = Math.floor(400 / perpWallDist);
+        let drawStart = Math.max(0, -lineHeight / 2 + 200);
+        let drawEnd = Math.min(399, lineHeight / 2 + 200);
+
+        // Texture Mapping
+        let wallHitX = side === 0 ? playerY + perpWallDist * rayDirY : playerX + perpWallDist * rayDirX;
+        wallHitX -= Math.floor(wallHitX);
+
+        if(textures.wall.complete) {
+           let texX = Math.floor(wallHitX * textures.wall.width);
+           dctx.drawImage(textures.wall, texX, 0, 1, textures.wall.height, x, drawStart, 1, drawEnd - drawStart);
+           // Lighting/Darkness
+           dctx.fillStyle = `rgba(0,0,0,${Math.min(0.8, perpWallDist/15)})`;
+           dctx.fillRect(x, drawStart, 1, drawEnd - drawStart);
+        } else {
+           let brightness = Math.min(100, 220 / perpWallDist);
+           dctx.fillStyle = side === 1 ? `hsl(185, 60%, ${brightness/2.5}%)` : `hsl(185, 60%, ${brightness/2}%)`;
+           dctx.fillRect(x, drawStart, 1, drawEnd - drawStart);
+        }
+      }
+
+      // Sprites (Bacteria, Pickups, Decorations)
+      let allSprites = [
+        ...bacteria.filter(b => b.alive).map(b => ({...b, kind: 'bacteria'})),
+        ...pickups.filter(p => p.active).map(p => ({...p, kind: 'pickup'})),
+        ...clinicDecor.map(d => ({...d, kind: 'decor'}))
+      ];
+
+      allSprites.sort((a,b) => {
+        let da = (playerX-a.x)**2 + (playerY-a.y)**2;
+        let db = (playerX-b.x)**2 + (playerY-b.y)**2;
+        return db - da;
+      });
+
+      allSprites.forEach(s => {
+        let spriteX = s.x - playerX;
+        let spriteY = s.y - playerY;
+        let invDet = 1.0 / (planeX * dirY - dirX * planeY);
+        let trX = invDet * (dirY * spriteX - dirX * spriteY);
+        let trY = invDet * (-planeY * spriteX + planeX * spriteY);
+        let sX = Math.floor((640 / 2) * (1 + trX / trY));
+        let sH = Math.abs(Math.floor(400 / trY));
+        let dY = 200 + (s.kind === 'bacteria' ? Math.sin(s.phase)*10 : sH/4);
+
+        if(trY > 0 && sX > 0 && sX < 640 && trY < zBuffer[sX]) {
+          if (s.kind === 'bacteria') {
+            dctx.fillStyle = s.type === 'bacteria' ? '#4ade80' : '#eab308';
+            dctx.beginPath(); dctx.arc(sX, dY, sH/4, 0, Math.PI*2); dctx.fill();
+            dctx.shadowBlur = 10; dctx.shadowColor = dctx.fillStyle; dctx.stroke(); dctx.shadowBlur = 0;
+          } else if (s.kind === 'decor') {
+            dctx.fillStyle = '#cbd5e1';
+            if (s.type === 'chair') {
+               dctx.fillRect(sX - sH/4, dY, sH/2, sH/6);
+               dctx.fillRect(sX - sH/6, dY - sH/4, sH/3, sH/4);
+            } else if (s.type === 'cabinet') {
+               dctx.fillStyle = '#94a3b8';
+               dctx.fillRect(sX - sH/4, dY - sH/4, sH/2, sH/2);
+               dctx.strokeStyle = 'white'; dctx.strokeRect(sX - sH/4, dY - sH/4, sH/2, sH/2);
+            } else {
+               dctx.fillRect(sX - 2, dY - sH/2, 4, sH/2);
+               dctx.fillStyle = '#f8fafc'; dctx.fillRect(sX - sH/6, dY - sH/2, sH/3, sH/4);
+            }
+          } else {
+            // Geometric Pickups
+            dctx.fillStyle = s.type === 'health' ? '#ef4444' : '#3b82f6';
+            dctx.fillRect(sX - sH/8, dY - sH/8, sH/4, sH/4);
+
+            dctx.fillStyle = 'white';
+            if(s.type === 'health') {
+              let sz = sH/16;
+              dctx.fillRect(sX - sz/2, dY - sH/10, sz, sH/5);
+              dctx.fillRect(sX - sH/10, dY - sz/2, sH/5, sz);
+            } else {
+              dctx.beginPath(); dctx.moveTo(sX, dY - sH/10); dctx.lineTo(sX - sH/12, dY); dctx.lineTo(sX + sH/12, dY); dctx.lineTo(sX, dY + sH/10); dctx.fill();
+            }
+          }
+        }
+      });
+
+      // Weapon Tool
+      let bob = Math.sin(walkCycle) * 10;
+      let tX = 320, tY = 280 + bob + weaponRecoil;
+      dctx.fillStyle = '#94a3b8'; dctx.fillRect(tX-15, tY, 30, 150);
+      dctx.fillStyle = '#cbd5e1'; dctx.fillRect(tX-4, tY-40, 8, 40);
+
+      if(muzzleFlash > 0) {
+        dctx.save(); dctx.globalAlpha = muzzleFlash; dctx.strokeStyle = '#e0f2fe'; dctx.lineWidth = 3;
+        for(let i=0; i<10; i++) {
+          dctx.beginPath(); dctx.moveTo(tX, tY-40);
+          dctx.lineTo(tX + (Math.random()-0.5)*200, tY - 200); dctx.stroke();
+        }
+        dctx.restore();
+      }
+
+      // Vignette
+      let v = dctx.createRadialGradient(320, 200, 100, 320, 200, 500);
+      v.addColorStop(0, 'rgba(0,0,0,0)'); v.addColorStop(1, 'rgba(0,0,0,0.5)');
+      dctx.fillStyle = v; dctx.fillRect(0, 0, 640, 400);
+
+      if (doomGameState !== 'playing') {
+        dctx.fillStyle = 'rgba(15, 23, 42, 0.9)'; dctx.fillRect(0, 0, 640, 400);
+        dctx.fillStyle = doomGameState === 'won' ? '#4ade80' : '#ef4444';
+        dctx.font = '900 64px Inter'; dctx.textAlign = 'center';
+        dctx.fillText(doomGameState === 'won' ? 'STERILIZED' : 'INFECTED', 320, 180);
+        dctx.fillStyle = 'white'; dctx.font = '600 20px Inter';
+        dctx.fillText(doomGameState === 'won' ? 'The clinic is safe. Shift complete.' : 'Hygiene failed. Medical waste detected.', 320, 230);
+        dctx.fillStyle = 'var(--primary-light)'; dctx.fillText('Press RESET MISSION to retry', 320, 280);
+      }
+    }
+
+    // --- CLINIC KOMBAT ENGINE ---
+    let mkLoopId = null;
+    let mkCanvas, mctx;
+    let p1 = { x: 100, y: 0, vx: 0, vy: 0, health: 100, state: 'idle', frame: 0, color: '#3385ff', dir: 1, lastHit: 0 };
+    let p2 = { x: 540, y: 0, vx: 0, vy: 0, health: 100, state: 'idle', frame: 0, color: '#eab308', dir: -1, lastHit: 0 };
+    let mkTimer = 99;
+    let mkStatus = 'playing';
+
+    window.startMK = function() {
+      document.getElementById('mk-overlay').style.display = 'none';
+      mkCanvas = document.getElementById('mk-canvas');
+      mctx = mkCanvas.getContext('2d');
+      mkCanvas.width = 800;
+      mkCanvas.height = 500;
+      
+      p1 = { x: 150, y: 400, vx: 0, vy: 0, health: 100, state: 'idle', frame: 0, color: '#3385ff', dir: 1, lastHit: 0 };
+      p2 = { x: 650, y: 400, vx: 0, vy: 0, health: 100, state: 'idle', frame: 0, color: '#eab308', dir: -1, lastHit: 0 };
+      mkTimer = 99;
+      mkStatus = 'playing';
+      
+      if (mkLoopId) cancelAnimationFrame(mkLoopId);
+      mkLoop();
+      
+      setInterval(() => { if(mkStatus === 'playing' && mkTimer > 0) mkTimer--; }, 1000);
+    };
+
+    function mkLoop() {
+      updateMK();
+      drawMK();
+      if(document.getElementById('mk-game-container').style.display !== 'none') {
+        mkLoopId = requestAnimationFrame(mkLoop);
+      }
+    }
+
+    function updateMK() {
+      if (mkStatus !== 'playing') return;
+
+      const gravity = 1.2;
+      const speed = 6;
+      const jump = -22;
+
+      // P1 Controls
+      if (keys['KeyA']) p1.vx = -speed;
+      else if (keys['KeyD']) p1.vx = speed;
+      else p1.vx = 0;
+
+      if (keys['KeyW'] && p1.y >= 400) p1.vy = jump;
+
+      if (keys['KeyJ'] && p1.state === 'idle') { p1.state = 'punch'; p1.frame = 0; }
+      if (keys['KeyK'] && p1.state === 'idle') { p1.state = 'kick'; p1.frame = 0; }
+
+      // P2 AI
+      let dist = p1.x - p2.x;
+      if (Math.abs(dist) > 80) p2.vx = Math.sign(dist) * 4;
+      else {
+        p2.vx = 0;
+        if (Math.random() > 0.95 && p2.state === 'idle') {
+          p2.state = Math.random() > 0.5 ? 'punch' : 'kick';
+          p2.frame = 0;
+        }
+      }
+      if (Math.abs(dist) < 150 && p1.vy < 0 && p2.y >= 400 && Math.random() > 0.9) p2.vy = jump;
+
+      // Physics
+      [p1, p2].forEach(p => {
+        p.x += p.vx;
+        p.y += p.vy;
+        if (p.y < 400) p.vy += gravity;
+        else { p.y = 400; p.vy = 0; }
+        
+        // Bounds
+        if (p.x < 50) p.x = 50;
+        if (p.x > 750) p.x = 750;
+
+        // States
+        if (p.state !== 'idle') {
+          p.frame++;
+          if (p.frame > 15) p.state = 'idle';
+        }
+      });
+
+      // Facing
+      p1.dir = p1.x < p2.x ? 1 : -1;
+      p2.dir = p2.x < p1.x ? 1 : -1;
+
+      // Collision
+      checkMKHit(p1, p2);
+      checkMKHit(p2, p1);
+
+      // UI
+      document.getElementById('p1-health').style.width = p1.health + '%';
+      document.getElementById('p2-health').style.width = p2.health + '%';
+      document.getElementById('mk-timer').innerText = mkTimer;
+
+      if (p1.health <= 0 || p2.health <= 0 || mkTimer <= 0) {
+        mkStatus = 'gameover';
+        let winText = p1.health > p2.health ? 'SUB-ZERO WINS' : 'SCORPION WINS';
+        if (p1.health <= 0 && p2.health <= 0) winText = 'DRAW';
+        document.getElementById('mk-status').innerText = winText;
+        document.getElementById('mk-overlay').style.display = 'flex';
+      }
+    }
+
+    function checkMKHit(attacker, defender) {
+      if (attacker.state === 'punch' && attacker.frame === 5) {
+        let reach = 60 * attacker.dir;
+        if (Math.abs(attacker.x + reach - defender.x) < 40 && Math.abs(attacker.y - defender.y) < 80) {
+          defender.health -= 5;
+          defender.lastHit = 10;
+        }
+      }
+      if (attacker.state === 'kick' && attacker.frame === 8) {
+        let reach = 80 * attacker.dir;
+        if (Math.abs(attacker.x + reach - defender.x) < 50 && Math.abs(attacker.y - defender.y) < 80) {
+          defender.health -= 10;
+          defender.lastHit = 10;
+        }
+      }
+      if (defender.lastHit > 0) defender.lastHit--;
+    }
+
+    function drawMK() {
+      mctx.fillStyle = '#050505';
+      mctx.fillRect(0, 0, 800, 500);
+
+      // Clinic Arena Background
+      mctx.strokeStyle = '#1e293b';
+      mctx.lineWidth = 2;
+      for(let i=0; i<800; i+=100) {
+        mctx.beginPath(); mctx.moveTo(i, 0); mctx.lineTo(i, 500); mctx.stroke();
+      }
+      mctx.fillStyle = '#0f172a';
+      mctx.fillRect(0, 400, 800, 100);
+
+      // Draw Fighters
+      drawFighter(p1);
+      drawFighter(p2);
+    }
+
+    function drawFighter(p) {
+      mctx.save();
+      mctx.translate(p.x, p.y);
+      mctx.scale(p.dir, 1);
+      
+      if (p.lastHit > 0) mctx.translate((Math.random()-0.5)*10, 0);
+
+      // Body Silhouette
+      mctx.fillStyle = p.lastHit > 0 ? '#fff' : '#111';
+      
+      // Legs
+      mctx.fillRect(-15, -40, 12, 40);
+      mctx.fillRect(5, -40, 12, 40);
+      
+      // Torso
+      mctx.fillRect(-20, -100, 40, 65);
+      
+      // Head
+      mctx.beginPath();
+      mctx.arc(0, -115, 18, 0, Math.PI*2);
+      mctx.fill();
+
+      // Colored Ninja Accents (Vests/Masks)
+      mctx.fillStyle = p.color;
+      mctx.fillRect(-18, -95, 36, 15); // Chest
+      mctx.fillRect(-12, -118, 24, 8); // Mask
+
+      // Arms
+      if (p.state === 'punch') {
+        mctx.fillRect(10, -90, 50, 12);
+      } else if (p.state === 'kick') {
+        mctx.save();
+        mctx.translate(10, -40);
+        mctx.rotate(-Math.PI/3);
+        mctx.fillRect(0, 0, 70, 15);
+        mctx.restore();
+      } else {
+        mctx.fillRect(15, -85, 10, 45);
+        mctx.fillRect(-25, -85, 10, 45);
+      }
+
+      mctx.restore();
+    }    // Solitaire Game Logic
+
+    // Solitaire Game Logic
+    let deck = [];
+    let gameStock = [];
+    let gameWaste = [];
+    let gameTableau = [[],[],[],[],[],[],[]];
+    let gameFoundations = { '♥': [], '♦': [], '♣': [], '♠': [] };
+
+    window.initSolitaire = function() {
+      console.log("Initializing Solitaire...");
+      const suits = ['♥', '♦', '♣', '♠'];
+      const values = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
+      deck = [];
+      
+      suits.forEach(s => {
+        values.forEach((v, i) => {
+          deck.push({ suit: s, value: v, rank: i + 1, color: (s==='♥' || s==='♦') ? 'red' : 'black', faceUp: false });
+        });
+      });
+
+      // Shuffle
+      for (let i = deck.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [deck[i], deck[j]] = [deck[j], deck[i]];
+      }
+
+      // Deal
+      gameTableau = [[],[],[],[],[],[],[]];
+      let cardIdx = 0;
+      for (let i = 0; i < 7; i++) {
+        for (let j = 0; j <= i; j++) {
+          const card = deck[cardIdx++];
+          if (j === i) card.faceUp = true;
+          gameTableau[i].push(card);
+        }
+      }
+
+      gameStock = deck.slice(cardIdx);
+      gameWaste = [];
+      gameFoundations = { '♥': [], '♦': [], '♣': [], '♠': [] };
+
+      // Ensure DOM is ready
+      setTimeout(() => {
+        window.renderSolitaire();
+        console.log("Solitaire Rendered");
+      }, 50);
+    };
+
+    window.drawCard = function() {
+      if (gameStock.length === 0) {
+        gameStock = gameWaste.reverse().map(c => ({...c, faceUp: false}));
+        gameWaste = [];
+      } else {
+        const card = gameStock.pop();
+        card.faceUp = true;
+        gameWaste.push(card);
+      }
+      window.renderSolitaire();
+    };
+
+    window.renderSolitaire = function() {
+      const stock = document.getElementById('stock');
+      const waste = document.getElementById('waste');
+      
+      stock.innerHTML = gameStock.length > 0 ? `<div class="solitaire-card back"></div>` : '';
+      waste.innerHTML = '';
+      if (gameWaste.length > 0) {
+        waste.appendChild(createCardEl(gameWaste[gameWaste.length - 1]));
+      }
+
+      // Foundations
+      ['♥', '♦', '♣', '♠'].forEach(s => {
+        const el = document.getElementById('f-' + (s === '♥' ? 'hearts' : s === '♦' ? 'diamonds' : s === '♣' ? 'clubs' : 'spades'));
+        el.innerHTML = `<div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:45px; opacity:0.1; filter: grayscale(1);">🦷</div>`;
+        if (gameFoundations[s].length > 0) {
+          el.appendChild(createCardEl(gameFoundations[s][gameFoundations[s].length - 1]));
+        }
+      });
+
+      // Tableau
+      for (let i = 0; i < 7; i++) {
+        const col = document.getElementById('t-' + i);
+        col.innerHTML = '';
+        gameTableau[i].forEach((card, j) => {
+          const cardEl = createCardEl(card);
+          cardEl.style.top = (j * 30) + 'px';
+          cardEl.onclick = (e) => {
+            e.stopPropagation();
+            window.handleCardClick(card, 't', i, j);
+          };
+          col.appendChild(cardEl);
+        });
+      }
+    };
+
+    function createCardEl(card) {
+      const div = document.createElement('div');
+      div.className = `solitaire-card ${card.color} ${card.faceUp ? '' : 'back'}`;
+      if (card.faceUp) {
+        div.innerHTML = `
+          <div style="position:absolute; top:8px; left:8px; display:flex; flex-direction:column; align-items:center; line-height:1; pointer-events:none;">
+            <span style="font-size: 20px;">${card.value}</span>
+            <span style="font-size: 14px;">${card.suit}</span>
+          </div>
+          <div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:48px; pointer-events:none; opacity: 0.9;">
+            ${card.suit}
+          </div>
+          <div style="position:absolute; bottom:8px; right:8px; display:flex; flex-direction:column; align-items:center; line-height:1; pointer-events:none; transform:rotate(180deg);">
+            <span style="font-size: 20px;">${card.value}</span>
+            <span style="font-size: 14px;">${card.suit}</span>
+          </div>
+        `;
+      }
+      return div;
+    }
+
+    window.handleCardClick = function(card, type, colIdx, rowIdx) {
+      if (!card.faceUp) return;
+
+      // Try move to foundation
+      const suit = card.suit;
+      const foundation = gameFoundations[suit];
+      if ((foundation.length === 0 && card.value === 'A') || 
+          (foundation.length > 0 && card.rank === foundation[foundation.length - 1].rank + 1)) {
+        
+        // Remove from source
+        if (type === 't') {
+          if (rowIdx === gameTableau[colIdx].length - 1) {
+            gameFoundations[suit].push(gameTableau[colIdx].pop());
+            if (gameTableau[colIdx].length > 0) gameTableau[colIdx][gameTableau[colIdx].length - 1].faceUp = true;
+          }
+        } else if (type === 'w') {
+          gameFoundations[suit].push(gameWaste.pop());
+        }
+        window.renderSolitaire();
+        return;
+      }
+
+      // Try move between tableau columns (Simplified click-to-move)
+      for (let targetIdx = 0; targetIdx < 7; targetIdx++) {
+        if (targetIdx === colIdx && type === 't') continue;
+        const targetCol = gameTableau[targetIdx];
+        const targetTopCard = targetCol[targetCol.length - 1];
+
+        const isValidMove = (targetCol.length === 0 && card.value === 'K') || 
+                           (targetCol.length > 0 && targetTopCard.faceUp && 
+                            targetTopCard.color !== card.color && 
+                            targetTopCard.rank === card.rank + 1);
+
+        if (isValidMove) {
+          let movingCards = [];
+          if (type === 't') {
+            movingCards = gameTableau[colIdx].splice(rowIdx);
+            if (gameTableau[colIdx].length > 0) gameTableau[colIdx][gameTableau[colIdx].length - 1].faceUp = true;
+          } else if (type === 'w') {
+            movingCards = [gameWaste.pop()];
+          }
+          gameTableau[targetIdx].push(...movingCards);
+          window.renderSolitaire();
+          break;
+        }
+      }
+    };
+
+    window.showView = function(v) {
+      const views = ['list', 'scheduler', 'add', 'staff', 'detail', 'analytics', 'solitaire'];
+      const navs = ['list', 'scheduler', 'add', 'staff', 'analytics', 'solitaire'];
+
+      views.forEach(viewId => {
+        const el = document.getElementById('view-' + viewId);
+        if (el) el.classList.toggle('hidden', viewId !== v);
+      });
+
+      navs.forEach(navId => {
+        const el = document.getElementById('nav-' + navId);
+        if (el) el.classList.toggle('active', navId === v);
+      });
+      
+      // Close mobile menu after navigation
+      if (window.innerWidth <= 1024) {
+        window.toggleMenu(false);
+      }
+
+      if (v === 'list') {
+        window.loadStaff().then(() => {
+          window.renderPatientList();
+          window.loadPatients();
+        });
+      }
+      if (v === 'scheduler') {
+        window.loadAppointments();
+      }
+      if (v === 'staff') {
+        window.loadStaff();
+      }
+      if (v === 'analytics') {
+        window.loadAnalytics();
+      }
+      if (v === 'solitaire') {
+        window.initSolitaire();
+      }
+    };
+
+    window.loadAnalytics = function() {
+      const summaryContainer = document.getElementById('analytics-summary');
+      const statusChart = document.getElementById('status-chart');
+      const findingsChart = document.getElementById('findings-chart');
+      const workloadList = document.getElementById('workload-list');
+
+      // 1. Summary Stats
+      const total = patients.length;
+      const active = patients.filter(p => (p.teeth && p.teeth.status) === 'Active').length;
+      const completed = patients.filter(p => (p.teeth && p.teeth.status) === 'Completed').length;
+      const alerts = patients.filter(p => p.teeth && p.teeth.medical_alerts && p.teeth.medical_alerts.trim() !== "").length;
+
+      summaryContainer.innerHTML = `
+        <div class="stat-card">
+          <span class="stat-label">Total Patients</span>
+          <span class="stat-value">${total}</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">Active Cases</span>
+          <span class="stat-value" style="color: #22c55e;">${active}</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">Completed</span>
+          <span class="stat-value" style="color: #3b82f6;">${completed}</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">Medical Alerts</span>
+          <span class="stat-value" style="color: #ef4444;">${alerts}</span>
+        </div>
+      `;
+
+      // 2. Status Chart
+      const statuses = ['Active', 'Inactive', 'Completed', 'Emergency'];
+      const statusCounts = statuses.map(s => patients.filter(p => (p.teeth && p.teeth.status) === s).length);
+      const maxStatus = Math.max(...statusCounts) || 1;
+      
+      statusChart.innerHTML = statuses.map((s, i) => `
+        <div class="bar-wrapper">
+          <div class="bar" style="height: ${(statusCounts[i] / maxStatus) * 100}%; background: var(--primary-light);">
+            <div class="bar-tooltip">${statusCounts[i]} Patients</div>
+          </div>
+          <span class="bar-label">${s}</span>
+        </div>
+      `).join('');
+
+      // 3. Odontogram Findings
+      let decayTotal = 0;
+      let filledTotal = 0;
+      patients.forEach(p => {
+        if (!p.teeth) return;
+        Object.values(p.teeth).forEach(val => {
+          if (val === 'decay') decayTotal++;
+          if (val === 'filled') filledTotal++;
+        });
+      });
+
+      const maxFindings = Math.max(decayTotal, filledTotal) || 1;
+      findingsChart.innerHTML = `
+        <div class="bar-wrapper">
+          <div class="bar" style="height: ${(decayTotal / maxFindings) * 100}%; background: #ef4444;">
+            <div class="bar-tooltip">${decayTotal} Instances</div>
+          </div>
+          <span class="bar-label">Decay</span>
+        </div>
+        <div class="bar-wrapper">
+          <div class="bar" style="height: ${(filledTotal / maxFindings) * 100}%; background: #3b82f6;">
+            <div class="bar-tooltip">${filledTotal} Instances</div>
+          </div>
+          <span class="bar-label">Filled</span>
+        </div>
+      `;
+
+      // 4. Dentist Workload
+      const workload = patients.reduce((acc, p) => {
+        const email = (p.teeth && p.teeth.dentist_email) || 'General / Unassigned';
+        acc[email] = (acc[email] || 0) + 1;
+        return acc;
+      }, {});
+
+      const sortedWorkload = Object.entries(workload).sort((a, b) => b[1] - a[1]);
+      const maxWorkload = sortedWorkload[0] ? sortedWorkload[0][1] : 1;
+
+      workloadList.innerHTML = sortedWorkload.map(([email, count]) => {
+        const name = staff[email] || email;
+        const percentage = (count / maxWorkload) * 100;
+        return `
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 600;">
+              <span>${name}</span>
+              <span style="color: var(--primary-light);">${count} Patients</span>
+            </div>
+            <div style="width: 100%; height: 8px; background: var(--card-muted); border-radius: 4px; overflow: hidden; border: 1px solid var(--border);">
+              <div style="width: ${percentage}%; height: 100%; background: var(--primary-light); transition: width 1s;"></div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    };
+
+    window.loadAppointments = async function() {
+      const { data, error } = await _supabase.from('appointments').select('*');
+      if (data) appointments = data;
+      window.renderScheduler();
+    };
+
+    window.changeWeek = function(dir) {
+      if (dir === 0) {
+        currentWeekStart = new Date();
+        currentWeekStart.setDate(currentWeekStart.getDate() - currentWeekStart.getDay());
+      } else {
+        currentWeekStart.setDate(currentWeekStart.getDate() + (dir * 7));
+      }
+      currentWeekStart.setHours(0, 0, 0, 0);
+      window.renderScheduler();
+    };
+
+    window.renderScheduler = function() {
+      const grid = document.getElementById('scheduler-grid');
+      const rangeDisplay = document.getElementById('scheduler-date-range');
+      const dentistFilter = document.getElementById('scheduler-dentist-filter').value;
+      
+      const weekEnd = new Date(currentWeekStart);
+      weekEnd.setDate(weekEnd.getDate() + 6);
+      
+      rangeDisplay.innerText = `${currentWeekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${weekEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
+
+      // Update dentist filter dropdown
+      const emails = new Set(patients.map(x => (x.teeth && x.teeth.dentist_email) || 'General / Unassigned'));
+      const currentFilter = document.getElementById('scheduler-dentist-filter').value;
+      document.getElementById('scheduler-dentist-filter').innerHTML = '<option value="all">All Dentists</option>' + 
+        Array.from(emails).map(e => `<option value="${e}" ${currentFilter === e ? 'selected' : ''}>${staff[e] || e}</option>`).join('');
+
+      let html = '<div style="background: var(--card-muted); padding: 15px; border-bottom: 1px solid var(--border); border-right: 1px solid var(--border);">Time</div>';
+      
+      const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(currentWeekStart);
+        d.setDate(d.getDate() + i);
+        const isToday = d.toDateString() === new Date().toDateString();
+        html += `
+          <div style="background: ${isToday ? 'var(--group-bg)' : 'var(--card-muted)'}; padding: 15px; text-align: center; border-bottom: 1px solid var(--border); border-right: ${i === 6 ? 'none' : '1px solid var(--border)'};">
+            <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">${days[i]}</div>
+            <div style="font-size: 18px; font-weight: 800; color: ${isToday ? 'var(--primary-light)' : 'var(--text-main)'}">${d.getDate()}</div>
+          </div>
+        `;
+      }
+
+      const hours = [8, 9, 10, 11, 12, 1, 2, 3, 4, 5];
+      const labels = ['8 AM', '9 AM', '10 AM', '11 AM', '12 PM', '1 PM', '2 PM', '3 PM', '4 PM', '5 PM'];
+
+      hours.forEach((h, hIdx) => {
+        html += `<div style="padding: 15px; font-size: 12px; font-weight: 700; color: var(--text-muted); background: var(--white); border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); text-align: right;">${labels[hIdx]}</div>`;
+        
+        for (let i = 0; i < 7; i++) {
+          const d = new Date(currentWeekStart);
+          d.setDate(d.getDate() + i);
+          const dateStr = d.toISOString().split('T')[0];
+          
+          const slotApps = appointments.filter(a => {
+            const matchesDate = a.date === dateStr && a.hour === h;
+            const matchesDentist = dentistFilter === 'all' || a.dentist_email === dentistFilter;
+            return matchesDate && matchesDentist;
+          });
+
+          html += `
+            <div style="background: var(--white); min-height: 80px; padding: 5px; border-bottom: 1px solid var(--border); border-right: ${i === 6 ? 'none' : '1px solid var(--border)'}; display: flex; flex-direction: column; gap: 4px; position: relative;">
+              ${slotApps.map(a => {
+                const p = patients.find(x => x.id === a.patient_id) || { fname: 'Unknown', lname: 'Patient' };
+                return `
+                  <div onclick="window.openEditAppointment('${a.id}')" style="background: var(--primary-light); color: white; padding: 6px; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer; box-shadow: var(--shadow);">
+                    ${p.fname} ${p.lname.charAt(0)}.
+                    <div style="font-size: 9px; opacity: 0.8; font-weight: 500;">${a.procedure || 'General'}</div>
+                  </div>
+                `;
+              }).join('')}
+              <button onclick="window.openAppointmentAt('${dateStr}', ${h})" style="flex: 1; background: transparent; border: 1px dashed var(--border); border-radius: 8px; opacity: 0; transition: opacity 0.2s; cursor: pointer;">+</button>
+            </div>
+          `;
+        }
+      });
+
+      grid.innerHTML = html;
+      
+      grid.querySelectorAll('div').forEach(cell => {
+        cell.onmouseenter = () => { if(cell.querySelector('button')) cell.querySelector('button').style.opacity = '1'; };
+        cell.onmouseleave = () => { if(cell.querySelector('button')) cell.querySelector('button').style.opacity = '0'; };
+      });
+    };
+
+    let currentAppId = null;
+
+    window.openNewAppointment = function() {
+      currentAppId = null;
+      document.getElementById('app-modal-title').innerText = "Schedule New Appointment";
+      document.getElementById('app-delete-btn').style.display = 'none';
+      document.getElementById('app-save-btn').innerText = "Save Appointment";
+      
+      const patientSelect = document.getElementById('app-patient-id');
+      patientSelect.innerHTML = patients.map(p => `<option value="${p.id}">${p.fname} ${p.lname}</option>`).join('');
+      
+      document.getElementById('app-date').value = new Date().toISOString().split('T')[0];
+      document.getElementById('app-hour').value = "8";
+      document.getElementById('app-procedure').value = "";
+      
+      window.toggleAppointmentModal(true);
+    };
+
+    window.openAppointmentAt = function(date, hour) {
+      window.openNewAppointment();
+      document.getElementById('app-date').value = date;
+      document.getElementById('app-hour').value = hour;
+    };
+
+    window.openEditAppointment = function(id) {
+      const app = appointments.find(a => a.id === id);
+      if (!app) return;
+      
+      currentAppId = id;
+      document.getElementById('app-modal-title').innerText = "Edit Appointment";
+      document.getElementById('app-delete-btn').style.display = 'block';
+      document.getElementById('app-save-btn').innerText = "Update Appointment";
+      
+      const patientSelect = document.getElementById('app-patient-id');
+      patientSelect.innerHTML = patients.map(p => `<option value="${p.id}" ${p.id === app.patient_id ? 'selected' : ''}>${p.fname} ${p.lname}</option>`).join('');
+      
+      document.getElementById('app-date').value = app.date;
+      document.getElementById('app-hour').value = app.hour;
+      document.getElementById('app-procedure').value = app.procedure || "";
+      
+      window.toggleAppointmentModal(true);
+    };
+
+    window.toggleAppointmentModal = function(show) {
+      const modal = document.getElementById('appointment-modal');
+      modal.style.display = show ? 'flex' : 'none';
+      modal.classList.toggle('hidden', !show);
+    };
+
+    window.closeAppointmentModal = function() {
+      window.toggleAppointmentModal(false);
+    };
+
+    window.processAppointment = async function() {
+      const patient_id = document.getElementById('app-patient-id').value;
+      const date = document.getElementById('app-date').value;
+      const hour = parseInt(document.getElementById('app-hour').value);
+      const procedure = document.getElementById('app-procedure').value;
+      
+      const { data: { user } } = await _supabase.auth.getUser();
+      const appData = { patient_id, date, hour, procedure, dentist_email: user.email };
+      
+      let res;
+      if (currentAppId) {
+        res = await _supabase.from('appointments').update(appData).eq('id', currentAppId);
+      } else {
+        res = await _supabase.from('appointments').insert([appData]);
+      }
+      
+      if (res.error) alert("Error: " + res.error.message);
+      else {
+        window.closeAppointmentModal();
+        window.loadAppointments();
+      }
+    };
+
+    window.deleteAppointment = async function() {
+      if (!confirm("Are you sure you want to cancel this appointment?")) return;
+      const { error } = await _supabase.from('appointments').delete().eq('id', currentAppId);
+      if (error) alert("Error: " + error.message);
+      else {
+        window.closeAppointmentModal();
+        window.loadAppointments();
+      }
+    };
+
+    window.handleLogout = async function() {
+      await _supabase.auth.signOut();
+      location.reload();
+    };
+
+    window.createPatient = async function() {
+      const fname = document.getElementById('new-fname').value;
+      const lname = document.getElementById('new-lname').value;
+      if(!fname || !lname) return alert("First and Last Name are required");
+      
+      const { data: { user } } = await _supabase.auth.getUser();
+      const imageInput = document.getElementById('new-image');
+      
+      const clinicalData = {
+        status: 'Active',
+        phone: document.getElementById('new-phone').value,
+        dob: document.getElementById('new-dob').value,
+        gender: document.getElementById('new-gender').value,
+        civil_status: document.getElementById('new-civil-status').value,
+        address: document.getElementById('new-address').value,
+        occupation: document.getElementById('new-occupation').value,
+        complaint: document.getElementById('new-complaint').value,
+        medical_alerts: document.getElementById('new-alerts').value,
+        lastvisit: document.getElementById('new-lastvisit').value,
+        reason: document.getElementById('new-reason').value,
+        concern: document.getElementById('new-concern').value,
+        notes: document.getElementById('new-notes').value,
+        dentist_email: user ? user.email : 'General',
+        images: []
+      };
+
+      const save = async (data) => {
+        flashSync();
+        const { error } = await _supabase.from('patients').insert([{ fname, lname, teeth: data }]);
+        if (error) {
+          alert("Error creating record: " + error.message);
+        } else {
+          window.showView('list');
+          window.loadPatients();
+          // Reset form
+          document.querySelectorAll('#view-add input, #view-add select, #view-add textarea').forEach(el => el.value = "");
+        }
+      };
+
+      if (imageInput.files[0]) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          clinicalData.images.push(e.target.result);
+          save(clinicalData);
+        };
+        reader.readAsDataURL(imageInput.files[0]);
+      } else {
+        save(clinicalData);
+      }
+    };
+
+    // removed window.checkSession() to prevent auto-login
+  </script>
+</body>
+</html>

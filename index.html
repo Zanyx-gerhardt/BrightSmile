@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Lacson Dental Clinic | Clinical Manager</title>
+  
+  <!-- External Libraries -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Local Styles -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- MODALS & OVERLAYS -->
+  
+  <!-- Full Image Viewer -->
+  <div id="image-viewer" class="hidden" style="position: fixed; inset: 0; background: rgba(15, 23, 42, 0.95); z-index: 11000; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 40px;">
+    <button onclick="window.closeImageViewer()" style="position: absolute; top: 30px; right: 30px; background: white; border: none; width: 44px; height: 44px; border-radius: 50%; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 15px rgba(0,0,0,0.3);">✕</button>
+    <img id="viewer-img" style="max-width: 100%; max-height: 80vh; border-radius: 12px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);">
+    <div id="viewer-info" style="margin-top: 24px; color: white; text-align: center; max-width: 600px;">
+      <h3 id="viewer-category" style="color: var(--accent); margin-bottom: 8px; text-transform: uppercase; font-size: 14px; letter-spacing: 1px;"></h3>
+      <p id="viewer-note" style="font-size: 18px; font-weight: 500;"></p>
+    </div>
+  </div>
+
+  <!-- Appointment Modal -->
+  <div id="appointment-modal" class="hidden" style="position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 10600; display: none; align-items: center; justify-content: center; padding: 20px;">
+    <div class="card" style="width: 100%; max-width: 500px; margin: 0;">
+      <h3 id="app-modal-title" style="margin-bottom: 20px;">Schedule New Appointment</h3>
+      <div style="margin-bottom: 15px;">
+        <label class="input-label">Select Patient</label>
+        <select id="app-patient-id" style="margin: 0;"></select>
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+        <div>
+          <label class="input-label">Date</label>
+          <input type="date" id="app-date" style="margin: 0;">
+        </div>
+        <div>
+          <label class="input-label">Time Slot</label>
+          <select id="app-hour" style="margin: 0;">
+            <option value="8">8:00 AM</option>
+            <option value="9">9:00 AM</option>
+            <option value="10">10:00 AM</option>
+            <option value="11">11:00 AM</option>
+            <option value="12">12:00 PM</option>
+            <option value="1">1:00 PM</option>
+            <option value="2">2:00 PM</option>
+            <option value="3">3:00 PM</option>
+            <option value="4">4:00 PM</option>
+            <option value="5">5:00 PM</option>
+          </select>
+        </div>
+      </div>
+      <div style="margin-bottom: 20px;">
+        <label class="input-label">Procedure / Notes</label>
+        <input type="text" id="app-procedure" placeholder="e.g. Tooth Extraction" style="margin: 0;">
+      </div>
+      <div style="display: flex; gap: 10px;">
+        <button id="app-save-btn" class="btn" style="flex: 1;" onclick="window.processAppointment()">Save Appointment</button>
+        <button id="app-delete-btn" class="btn" style="flex: 1; background: #ef4444; display: none;" onclick="window.deleteAppointment()">Delete</button>
+        <button class="btn" style="flex: 1; background: #94a3b8;" onclick="window.toggleAppointmentModal(false)">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Status Sync Badge -->
+  <div id="status-sync" class="status-badge">✨ Changes Synced</div>
+
+  <!-- Sidebar Overlay (Mobile) -->
+  <div class="sidebar-overlay" id="sidebar-overlay" onclick="window.toggleMenu(false)"></div>
+
+  <!-- AUTH VIEW -->
+  <div id="login-view">
+    <div style="position: absolute; top: 40px; width: 100%; text-align: center; padding: 0 20px;">
+      <h1 class="rainbow-text" style="font-family: 'Comic Sans MS', 'Comic Sans', cursive; font-size: clamp(24px, 5vw, 48px); text-shadow: 3px 3px 0px rgba(0,0,0,0.6); opacity: 0.9;">
+        dont forget to "copy to github then link to vercel"
+      </h1>
+    </div>
+    <div class="login-box">
+      <div style="margin-bottom: 2.5rem;">
+        <div style="background: linear-gradient(135deg, var(--primary), var(--primary-light)); width: 84px; height: 84px; border-radius: 20px; color: white; display: flex; align-items: center; justify-content: center; font-size: 44px; font-weight: 900; margin: 0 auto 1.5rem; box-shadow: 0 15px 30px -5px rgba(0, 31, 92, 0.4); border: 4px solid rgba(255,255,255,0.1);">L</div>
+        <h2 style="font-size: 26px; font-weight: 900; color: var(--primary); letter-spacing: 1px; line-height: 1.2;">LACSON<br><span style="color: var(--primary-light); font-size: 16px; letter-spacing: 3px; font-weight: 700;">DENTAL CLINIC</span></h2>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 4px; margin-bottom: 1.5rem;">
+        <input type="email" id="login-email" placeholder="Email address">
+        <input type="password" id="login-pass" placeholder="Password">
+      </div>
+      <button class="btn" id="login-btn" style="width: 100%; justify-content: center; height: 52px; font-size: 16px;" onclick="window.handleLogin()">
+        <span id="login-btn-text">Access Dashboard</span>
+        <div id="login-spinner" class="spinner hidden" style="width: 20px; height: 20px; border-width: 3px; margin: 0;"></div>
+      </button>
+      <p id="auth-error" style="color: #ef4444; font-size: 14px; margin-top: 1.5rem; display: none; font-weight: 600;"></p>
+    </div>
+  </div>
+
+  <!-- MAIN APP CONTAINER -->
+  <div class="app-container" id="app">
+    
+    <!-- Mobile Header -->
+    <header class="mobile-header">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <span style="background: white; color: var(--primary); padding: 2px 8px; border-radius: 4px; font-weight: 900; font-size: 14px;">L</span>
+        <span style="font-weight: 700; font-size: 14px; letter-spacing: 0.5px;">LACSON DENTAL</span>
+      </div>
+      <button class="menu-toggle" onclick="window.toggleMenu(true)">☰</button>
+    </header>
+
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-content">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+          <div style="display: flex; align-items: center; gap: 14px;">
+            <div style="background: linear-gradient(135deg, var(--primary), var(--primary-light)); min-width: 48px; height: 48px; border-radius: 12px; color: white; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 900;">L</div>
+            <div style="display: flex; flex-direction: column; line-height: 1.1;">
+              <span style="color: var(--accent); letter-spacing: 1px; font-size: 18px; font-weight: 900;">LACSON</span>
+              <span style="color: var(--primary-light); font-size: 9px; letter-spacing: 1px; font-weight: 800; text-transform: uppercase;">Dental Clinic</span>
+            </div>
+          </div>
+          <button class="menu-toggle" onclick="window.toggleMenu(false)" style="display: none;" id="close-menu-btn">✕</button>
+        </div>
+
+        <div id="user-display" style="padding: 16px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: 14px; font-size: 11px; color: #94a3b8;">
+          <div style="font-weight: 700; color: #cbd5e1; margin-bottom: 6px; text-transform: uppercase; font-size: 10px; letter-spacing: 0.05em;">Session Active</div>
+          <div id="current-user-email" style="word-break: break-all; opacity: 0.9; font-weight: 500;">...</div>
+        </div>
+
+        <nav class="nav-group">
+          <button class="nav-btn active" id="nav-list" onclick="window.showView('list')"><span><i data-lucide="users"></i></span> Patients</button>
+          <button class="nav-btn" id="nav-scheduler" onclick="window.showView('scheduler')"><span><i data-lucide="calendar"></i></span> Scheduler</button>
+          <button class="nav-btn" id="nav-add" onclick="window.showView('add')"><span><i data-lucide="user-plus"></i></span> New Admission</button>
+          <button class="nav-btn" id="nav-staff" onclick="window.showView('staff')"><span><i data-lucide="clipboard-list"></i></span> Staff Directory</button>
+          <button class="nav-btn" id="nav-analytics" onclick="window.showView('analytics')"><span><i data-lucide="bar-chart-3"></i></span> Clinic Analytics</button>
+          <button class="nav-btn" id="nav-solitaire" onclick="window.showView('solitaire')"><span><i data-lucide="gamepad-2"></i></span> Break Room</button>
+        </nav>
+
+        <div class="theme-toggle" onclick="window.toggleTheme()" style="margin-top: auto;">
+          <span id="theme-icon"><i data-lucide="moon"></i></span>
+          <span id="theme-text">Dark Mode</span>
+        </div>
+      </div>
+
+      <div class="sidebar-footer">
+        <button class="nav-btn" onclick="window.handleLogout()" style="color: #fb7185; margin-bottom: 1rem; padding: 10px 18px;">
+          <span><i data-lucide="log-out"></i></span> Sign Out
+        </button>
+        <div style="padding: 0 16px; font-size: 10px; font-weight: 500; color: #64748b;">
+          &copy; 2026 Lacson Dental Clinic
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      
+      <!-- List View -->
+      <div id="view-list">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+          <h1>Patient Directory</h1>
+          <button class="btn" onclick="window.showView('add')">Add New Patient</button>
+        </div>
+        <div class="card" style="padding: 1.5rem; margin-bottom: 1.5rem;">
+          <div style="position: relative;">
+            <span style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: var(--text-muted);"><i data-lucide="search" style="width: 18px;"></i></span>
+            <input type="text" id="patient-search" placeholder="Search by name or phone..." style="margin: 0; padding-left: 45px; background: var(--white);" oninput="window.filterPatients()">
+          </div>
+        </div>
+        <div class="card">
+          <table>
+            <thead>
+              <tr><th>Patient Name</th><th>Phone</th><th>Status</th><th>Address</th><th style="text-align: right;">Action</th></tr>
+            </thead>
+            <tbody id="table-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Detail View -->
+      <div id="view-detail" class="hidden">
+        <div style="margin-bottom: 2rem;">
+          <button onclick="window.showView('list')" style="background: none; border: none; color: var(--primary); cursor: pointer; font-weight: 600;">← Back to Directory</button>
+          <h1 id="det-name" style="margin-top: 10px;"></h1>
+        </div>
+
+        <div id="medical-alert-banner" class="hidden" style="background: var(--group-bg); border-left: 5px solid #ef4444; padding: 15px; border-radius: 12px; margin-bottom: 20px; display: flex; align-items: center; gap: 15px;">
+          <i data-lucide="alert-triangle" style="color: #ef4444;"></i>
+          <div id="alert-text-banner"></div>
+        </div>
+
+        <div class="card" style="background: var(--card-muted); display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+          <div><label class="input-label">Phone</label><input type="tel" id="det-phone"></div>
+          <div><label class="input-label">DOB</label><input type="date" id="det-dob"></div>
+          <div><label class="input-label">Age</label><div id="det-age-display" style="font-weight: 700; padding: 10px;"></div></div>
+          <div><label class="input-label">Status</label><select id="det-status"><option>Active</option><option>Inactive</option><option>Completed</option><option>Emergency</option></select></div>
+          <div><label class="input-label">Attending Dentist</label><select id="det-dentist-select"></select></div>
+        </div>
+
+        <div class="card">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <h3>Teeth Mapping</h3>
+            <button class="btn" style="background: #94a3b8;" onclick="window.toggleSketchMode('teeth')">Toggle Sketch</button>
+          </div>
+          <div class="odontogram-wrapper">
+            <div id="jaw-upper" class="jaw-container upper"></div>
+            <div id="jaw-lower" class="jaw-container lower"></div>
+            <canvas id="sketch-canvas"></canvas>
+          </div>
+          <div id="sketch-toolbar" class="sketch-toolbar" style="display: none;">
+            <div class="color-swatch active" style="background: #ef4444;" onclick="window.sketchColor='#ef4444'"></div>
+            <div class="color-swatch" style="background: #3b82f6;" onclick="window.sketchColor='#3b82f6'"></div>
+            <button class="btn" onclick="window.toggleSketchMode('teeth')">Done</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Treatment History</h3>
+          <div id="treatment-timeline" style="margin-top: 20px;"></div>
+          <p id="no-treatment-msg" class="hidden">No history found.</p>
+        </div>
+
+        <div class="card">
+          <h3>Clinical Images</h3>
+          <div id="image-gallery" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; margin-top: 20px;"></div>
+        </div>
+      </div>
+
+      <!-- Scheduler View -->
+      <div id="view-scheduler" class="hidden">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+          <h1>Scheduler</h1>
+          <select id="scheduler-dentist-filter" onchange="window.renderScheduler()"><option value="all">All Dentists</option></select>
+        </div>
+        <div class="card" id="scheduler-grid" style="display: grid; grid-template-columns: 80px repeat(7, 1fr); gap: 1px; background: var(--border);"></div>
+      </div>
+
+      <!-- Break Room (Games) -->
+      <div id="view-solitaire" class="hidden">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+          <h1>Break Room</h1>
+          <div style="display: flex; gap: 10px;">
+            <button class="btn" id="game-reset-btn" onclick="window.resetCurrentGame()" style="display: none; background: #334155;">Reset</button>
+            <button class="btn" id="break-room-back" onclick="window.showGameLibrary()" style="display: none;">Back</button>
+          </div>
+        </div>
+        <div id="game-library" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+          <div class="card" onclick="window.launchGame('solitaire')" style="cursor: pointer; text-align: center;"><h2>🃏 Solitaire</h2></div>
+          <div class="card" onclick="window.launchGame('doom')" style="cursor: pointer; text-align: center;"><h2>🔫 DOOM</h2></div>
+          <div class="card" onclick="window.launchGame('mk')" style="cursor: pointer; text-align: center;"><h2>🐲 Mortal Kombat</h2></div>
+        </div>
+        <div id="solitaire-game-container" style="display: none;">
+          <div id="solitaire-board">
+            <div class="solitaire-row">
+              <div id="stock" class="card-slot" onclick="window.drawCard()"></div>
+              <div id="waste" class="card-slot"></div>
+              <div style="flex:1;"></div>
+              <div id="f-hearts" class="card-slot foundation" data-suit="♥"></div>
+              <div id="f-diamonds" class="card-slot foundation" data-suit="♦"></div>
+              <div id="f-clubs" class="card-slot foundation" data-suit="♣"></div>
+              <div id="f-spades" class="card-slot foundation" data-suit="♠"></div>
+            </div>
+            <div class="solitaire-row" id="tableau-row">
+              <div class="tableau-col" id="t-0"></div><div class="tableau-col" id="t-1"></div><div class="tableau-col" id="t-2"></div>
+              <div class="tableau-col" id="t-3"></div><div class="tableau-col" id="t-4"></div><div class="tableau-col" id="t-5"></div>
+              <div class="tableau-col" id="t-6"></div>
+            </div>
+          </div>
+        </div>
+        <div id="doom-game-container" style="display: none;">
+          <div class="card" style="padding: 0; height: 500px; background: #000; position: relative;">
+            <canvas id="doom-canvas" style="width: 100%; height: 100%; image-rendering: pixelated;"></canvas>
+            <div id="doom-overlay" style="position: absolute; inset: 0; background: rgba(0,0,0,0.8); display: flex; flex-direction: column; align-items: center; justify-content: center; color: white;">
+              <h1>CLINIC OPS</h1>
+              <button class="btn" onclick="window.startDoom()">START</button>
+            </div>
+          </div>
+        </div>
+        <div id="mk-game-container" style="display: none;">
+          <div class="card" style="padding: 0; height: 500px; background: #000; position: relative;">
+            <canvas id="mk-canvas" style="width: 100%; height: 100%;"></canvas>
+            <div id="mk-overlay" style="position: absolute; inset: 0; background: rgba(0,0,0,0.8); display: flex; flex-direction: column; align-items: center; justify-content: center; color: white;">
+              <h1 id="mk-status">CLINIC KOMBAT</h1>
+              <button class="btn" onclick="window.startMK()">START</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- Application Logic Scripts -->
+  <script src="js/supabase-client.js"></script>
+  <script src="js/games.js"></script>
+  <script src="js/app-logic.js"></script>
+</body>
+</html>
