@@ -603,6 +603,36 @@ window.loadAnalytics = function() {
     </div>
   `).join('');
 
+  // Dental Health Findings Chart
+  const findingsChart = document.getElementById('findings-chart');
+  if (findingsChart) {
+    const totalTeeth = patients.length * 32;
+    let decayCount = 0, filledCount = 0;
+    patients.forEach(p => {
+      if (p.teeth) {
+        for (let i = 1; i <= 32; i++) {
+          if (p.teeth[i] === 'decay') decayCount++;
+          if (p.teeth[i] === 'filled') filledCount++;
+        }
+      }
+    });
+    
+    const findingsData = [
+      { label: 'Decay', count: decayCount, color: '#ef4444' },
+      { label: 'Filled', count: filledCount, color: 'var(--primary-light)' }
+    ];
+    const maxFinding = Math.max(...findingsData.map(d => d.count)) || 1;
+    
+    findingsChart.innerHTML = findingsData.map(d => `
+      <div class="bar-wrapper">
+        <div class="bar" style="height: ${(d.count/maxFinding)*100}%; background: ${d.color};">
+          <div class="bar-tooltip">${d.count} Teeth</div>
+        </div>
+        <div class="bar-label">${d.label}</div>
+      </div>
+    `).join('');
+  }
+
   // Dentist Workload
   const workload = appointments.reduce((acc, a) => {
     acc[a.dentist_email] = (acc[a.dentist_email] || 0) + 1;
