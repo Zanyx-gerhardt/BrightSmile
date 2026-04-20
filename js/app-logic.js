@@ -27,11 +27,12 @@ const flashSync = (text = "✨ Changes Synced") => {
 window.calculateAge = function(dob) {
   if(!dob) return "—";
   const birthDate = new Date(dob);
+  if (isNaN(birthDate.getTime())) return "—";
   const today = new Date();
   let age = today.getFullYear() - birthDate.getFullYear();
   const m = today.getMonth() - birthDate.getMonth();
   if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--;
-  return age + " years old";
+  return age + "y";
 };
 
 // --- AUTH & SESSION ---
@@ -43,7 +44,7 @@ window.checkSession = async function() {
       document.getElementById('login-view').style.display = 'none';
       document.getElementById('app').style.display = 'grid';
       document.getElementById('current-user-email').innerText = user.email;
-      Promise.all([window.loadStaff(), window.loadPatients()]);
+      Promise.all([window.loadStaff(), window.loadPatients(), window.loadAppointments()]);
     }
   } catch (e) {
     console.error("Session check failed", e);
@@ -141,7 +142,16 @@ window.renderPatientList = function(listToRender) {
     const headerRow = `<tr style="background: var(--card-muted);"><td colspan="5" style="padding: 12px; font-weight: 700;">👨‍⚕️ Dentist: <span style="color: var(--primary-light);">${displayName}</span></td></tr>`;
     const rows = groupList.map(p => {
       const t = p.teeth || {}, status = t.status || 'Active';
-      return `<tr><td style="font-weight: 600;">${p.fname} ${p.lname}</td><td>${t.phone || "—"}</td><td>${status}</td><td>${t.address || "—"}</td><td style="text-align: right;"><button class="btn" onclick="window.openPatient('${p.id}')">View</button></td></tr>`;
+      const age = window.calculateAge(t.dob);
+      const gender = (t.gender || "—").charAt(0).toUpperCase();
+      return `<tr>
+        <td style="font-weight: 600;">${p.fname} ${p.lname}</td>
+        <td>${t.phone || "—"}</td>
+        <td><span style="font-size:11px; padding:4px 8px; border-radius:6px; background:var(--group-bg); font-weight:700;">${status}</span></td>
+        <td>${age} (${gender})</td>
+        <td>${t.address || "—"}</td>
+        <td style="text-align: right;"><button class="btn" style="padding:8px 16px; font-size:12px;" onclick="window.openPatient('${p.id}')">View Profile</button></td>
+      </tr>`;
     }).join('');
     return headerRow + rows;
   }).join('');
@@ -289,8 +299,24 @@ window.renderOdontogram = function(p) {
 window.renderPerioChart = function(p) {
   const container = document.getElementById('perio-visual-container'); if(!container) return;
   const perio = (p.teeth && p.teeth.perio) || {};
-  container.innerHTML = '<div style="display: grid; grid-template-columns: repeat(16, 1fr); gap: 5px;">' + 
-    Array.from({length: 32}, (_, i) => `<input type="number" value="${perio[i+1]||''}" style="width:100%;" onblur="window.savePerioValue(${i+1}, this.value)">`).join('') + '</div>';
+  
+  let html = '<div style="display: grid; grid-template-columns: repeat(16, 1fr); gap: 2px; background: var(--border); border: 1px solid var(--border); padding: 1px;">';
+  // Upper Teeth (1-16)
+  for(let i=1; i<=16; i++) {
+    html += `<div style="background: var(--white); padding: 4px; text-align: center;">
+      <div style="font-size: 9px; font-weight: 800; color: var(--text-muted); margin-bottom: 2px;">${i}</div>
+      <input type="number" value="${perio[i]||''}" style="width: 100%; padding: 4px; font-size: 12px; text-align: center; margin: 0; border-radius: 4px;" onblur="window.savePerioValue(${i}, this.value)">
+    </div>`;
+  }
+  // Lower Teeth (17-32)
+  for(let i=17; i<=32; i++) {
+    html += `<div style="background: var(--white); padding: 4px; text-align: center;">
+      <input type="number" value="${perio[i]||''}" style="width: 100%; padding: 4px; font-size: 12px; text-align: center; margin: 0; border-radius: 4px;" onblur="window.savePerioValue(${i}, this.value)">
+      <div style="font-size: 9px; font-weight: 800; color: var(--text-muted); margin-top: 2px;">${i}</div>
+    </div>`;
+  }
+  html += '</div>';
+  container.innerHTML = html;
 };
 
 window.savePerioValue = async function(tooth, val) {
@@ -383,25 +409,212 @@ window.addTreatmentEntry = async function() {
 };
 
 // --- SCHEDULER ---
+window.changeWeek = function(offset) {
+  if (offset === 0) currentWeekStart = new Date();
+  else currentWeekStart.setDate(currentWeekStart.getDate() + (offset * 7));
+  
+  // Align to Sunday
+  currentWeekStart.setDate(currentWeekStart.getDate() - currentWeekStart.getDay());
+  currentWeekStart.setHours(0,0,0,0);
+  window.renderScheduler();
+};
+
 window.loadAppointments = async function() {
-  const { data } = await _supabase.from('appointments').select('*');
-  if (data) appointments = data; window.renderScheduler();
+  flashSync("Loading Schedule...");
+  const { data, error } = await _supabase.from('appointments').select('*');
+  if (error) console.error("Appointments fetch error:", error);
+  if (data) appointments = data;
+  window.renderScheduler();
 };
 
 window.renderScheduler = function() {
-  const grid = document.getElementById('scheduler-grid'); if(!grid) return;
+  const grid = document.getElementById('scheduler-grid');
+  const rangeDisplay = document.getElementById('scheduler-date-range');
+  const dentistFilter = document.getElementById('scheduler-dentist-filter').value;
+  if(!grid) return;
+
+  const weekEnd = new Date(currentWeekStart);
+  weekEnd.setDate(weekEnd.getDate() + 6);
+  if (rangeDisplay) {
+    rangeDisplay.innerText = `${currentWeekStart.toLocaleDateString(undefined, {month:'short', day:'numeric'})} - ${weekEnd.toLocaleDateString(undefined, {month:'short', day:'numeric', year:'numeric'})}`;
+  }
+
+  // Populate Dentist Filter if empty (other than 'all')
+  const filterSelect = document.getElementById('scheduler-dentist-filter');
+  if (filterSelect && filterSelect.options.length <= 1) {
+    const emails = new Set(appointments.map(a => a.dentist_email));
+    emails.forEach(e => {
+      if (e) {
+        const opt = document.createElement('option');
+        opt.value = e;
+        opt.text = staff[e] || e;
+        filterSelect.add(opt);
+      }
+    });
+  }
+
   const hours = [8, 9, 10, 11, 12, 1, 2, 3, 4, 5];
-  let html = '<div>Time</div><div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>';
+  const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  
+  let html = `<div style="background:var(--card-muted); padding:10px; font-weight:800; text-align:center; border-bottom:2px solid var(--border);">Time</div>`;
+  for(let i=0; i<7; i++) {
+    const d = new Date(currentWeekStart);
+    d.setDate(d.getDate() + i);
+    const isToday = d.toDateString() === new Date().toDateString();
+    html += `<div style="background:${isToday ? 'var(--group-bg)' : 'var(--card-muted)'}; padding:10px; text-align:center; border-bottom:2px solid var(--border);">
+      <div style="font-size:10px; text-transform:uppercase; color:var(--text-muted);">${dayNames[i]}</div>
+      <div style="font-weight:800; color:${isToday ? 'var(--primary-light)' : 'inherit'}">${d.getDate()}</div>
+    </div>`;
+  }
+
   hours.forEach(h => {
-    html += `<div>${h}</div>` + Array.from({length: 7}, (_, i) => `<div style="min-height:50px; border:1px solid #eee;"></div>`).join('');
+    const displayHour = h + (h < 8 || h === 12 ? (h === 12 ? ' PM' : ' PM') : ' AM');
+    html += `<div style="background:var(--card-muted); padding:10px; font-weight:700; font-size:11px; text-align:center; border-right:1px solid var(--border); border-bottom:1px solid var(--border);">${displayHour}</div>`;
+    
+    for(let i=0; i<7; i++) {
+      const dayDate = new Date(currentWeekStart);
+      dayDate.setDate(dayDate.getDate() + i);
+      const dateStr = dayDate.toISOString().split('T')[0];
+      
+      const slotApps = appointments.filter(a => {
+        const matchDate = a.date === dateStr;
+        const matchHour = parseInt(a.hour) === h;
+        const matchDentist = dentistFilter === 'all' || a.dentist_email === dentistFilter;
+        return matchDate && matchHour && matchDentist;
+      });
+
+      html += `<div class="scheduler-slot" style="min-height:80px; background:var(--white); border-right:1px solid var(--border); border-bottom:1px solid var(--border); padding:4px; overflow-y:auto;">`;
+      slotApps.forEach(app => {
+        const p = patients.find(x => x.id === app.patient_id) || {fname:'Unknown', lname:'Patient'};
+        html += `<div onclick="window.openAppointmentModal('${app.id}')" style="background:var(--primary-light); color:white; padding:6px; border-radius:8px; font-size:10px; font-weight:700; margin-bottom:4px; cursor:pointer; box-shadow:0 2px 4px rgba(0,0,0,0.1); border-left:4px solid var(--primary);">
+          <div style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${p.fname} ${p.lname}</div>
+          <div style="opacity:0.8; font-weight:500;">${app.procedure || 'Consultation'}</div>
+        </div>`;
+      });
+      // Empty slot click to add
+      if(slotApps.length === 0) {
+        html += `<div onclick="window.openNewAppointment('${dateStr}', ${h})" style="height:100%; width:100%; cursor:pointer; opacity:0; transition:opacity 0.2s;" onmouseover="this.style.opacity=0.1; this.style.background='var(--primary)'" onmouseout="this.style.opacity=0"></div>`;
+      }
+      html += `</div>`;
+    }
   });
   grid.innerHTML = html;
 };
 
+window.openNewAppointment = function(date, hour) {
+  currentId = null; // Reusing for appt id
+  document.getElementById('app-modal-title').innerText = "Schedule New Appointment";
+  document.getElementById('app-patient-id').innerHTML = patients.map(p => `<option value="${p.id}">${p.fname} ${p.lname}</option>`).join('');
+  document.getElementById('app-date').value = date || new Date().toISOString().split('T')[0];
+  document.getElementById('app-hour').value = hour || 8;
+  document.getElementById('app-procedure').value = "";
+  document.getElementById('app-delete-btn').style.display = 'none';
+  window.toggleAppointmentModal(true);
+};
+
+window.openAppointmentModal = function(appId) {
+  const app = appointments.find(a => a.id === appId);
+  if(!app) return;
+  currentId = appId;
+  document.getElementById('app-modal-title').innerText = "Edit Appointment";
+  document.getElementById('app-patient-id').innerHTML = patients.map(p => `<option value="${p.id}" ${p.id === app.patient_id ? 'selected' : ''}>${p.fname} ${p.lname}</option>`).join('');
+  document.getElementById('app-date').value = app.date;
+  document.getElementById('app-hour').value = app.hour;
+  document.getElementById('app-procedure').value = app.procedure || "";
+  document.getElementById('app-delete-btn').style.display = 'block';
+  window.toggleAppointmentModal(true);
+};
+
+window.toggleAppointmentModal = function(show) {
+  const modal = document.getElementById('appointment-modal');
+  if(modal) {
+    modal.style.display = show ? 'flex' : 'none';
+    modal.classList.toggle('hidden', !show);
+  }
+};
+
+window.processAppointment = async function() {
+  const patient_id = document.getElementById('app-patient-id').value;
+  const date = document.getElementById('app-date').value;
+  const hour = document.getElementById('app-hour').value;
+  const procedure = document.getElementById('app-procedure').value;
+  const { data: { user } } = await _supabase.auth.getUser();
+
+  const appData = {
+    patient_id, date, hour, procedure,
+    dentist_email: user ? user.email : 'General'
+  };
+
+  flashSync("Saving Appointment...");
+  if (currentId && typeof currentId === 'string' && currentId.length > 10) { // Check if it's a UUID
+      await _supabase.from('appointments').update(appData).eq('id', currentId);
+  } else {
+      await _supabase.from('appointments').insert([appData]);
+  }
+  
+  window.toggleAppointmentModal(false);
+  window.loadAppointments();
+};
+
+window.deleteAppointment = async function() {
+  if(!confirm("Delete this appointment?")) return;
+  await _supabase.from('appointments').delete().eq('id', currentId);
+  window.toggleAppointmentModal(false);
+  window.loadAppointments();
+};
+
 // --- ANALYTICS ---
 window.loadAnalytics = function() {
-  const summary = document.getElementById('analytics-summary'); if(!summary) return;
-  summary.innerHTML = `<div class="stat-card">Total: ${patients.length}</div>`;
+  const summary = document.getElementById('analytics-summary');
+  const statusChart = document.getElementById('status-chart');
+  const workloadList = document.getElementById('workload-list');
+  if(!summary || !statusChart) return;
+
+  // Summary Stats
+  const activeCount = patients.filter(p => (p.teeth && p.teeth.status) === 'Active').length;
+  const newThisMonth = patients.filter(p => {
+      // Assuming we have a created_at or using lastvisit as proxy for now
+      if(!p.created_at) return false;
+      const d = new Date(p.created_at);
+      return d.getMonth() === new Date().getMonth() && d.getFullYear() === new Date().getFullYear();
+  }).length;
+
+  summary.innerHTML = `
+    <div class="stat-card"><div class="stat-label">Total Patients</div><div class="stat-value">${patients.length}</div></div>
+    <div class="stat-card"><div class="stat-label">Active Cases</div><div class="stat-value">${activeCount}</div></div>
+    <div class="stat-card"><div class="stat-label">Appointments</div><div class="stat-value">${appointments.length}</div></div>
+    <div class="stat-card"><div class="stat-label">New This Month</div><div class="stat-value">${newThisMonth}</div></div>
+  `;
+
+  // Status Breakdown Chart
+  const statuses = ['Active', 'Inactive', 'Completed', 'Emergency'];
+  const statusData = statuses.map(s => ({
+    label: s,
+    count: patients.filter(p => (p.teeth && p.teeth.status) === s).length
+  }));
+  const maxStatus = Math.max(...statusData.map(d => d.count)) || 1;
+
+  statusChart.innerHTML = statusData.map(d => `
+    <div class="bar-wrapper">
+      <div class="bar" style="height: ${(d.count/maxStatus)*100}%; background: var(--primary-light);">
+        <div class="bar-tooltip">${d.count} Patients</div>
+      </div>
+      <div class="bar-label">${d.label}</div>
+    </div>
+  `).join('');
+
+  // Dentist Workload
+  const workload = appointments.reduce((acc, a) => {
+    acc[a.dentist_email] = (acc[a.dentist_email] || 0) + 1;
+    return acc;
+  }, {});
+
+  workloadList.innerHTML = Object.entries(workload).map(([email, count]) => `
+    <div style="display:flex; justify-content:space-between; padding:12px; border-bottom:1px solid var(--border);">
+      <span style="font-weight:600;">${staff[email] || email}</span>
+      <span style="color:var(--primary-light); font-weight:800;">${count} Appts</span>
+    </div>
+  `).join('') || '<p style="padding:20px; color:var(--text-muted);">No appointment data available.</p>';
 };
 
 // --- STAFF ---
@@ -420,6 +633,10 @@ window.saveStaffName = async function() {
 
 // --- THEME & NAV ---
 window.showView = function(v) {
+  if (v === 'analytics') window.loadAnalytics();
+  if (v === 'scheduler') window.renderScheduler();
+  if (v === 'list') window.renderPatientList();
+  
   ['list', 'scheduler', 'add', 'staff', 'detail', 'analytics', 'solitaire'].forEach(id => {
     const el = document.getElementById('view-' + id); if (el) el.classList.toggle('hidden', id !== v);
     const nav = document.getElementById('nav-' + id); if (nav) nav.classList.toggle('active', id === v);
